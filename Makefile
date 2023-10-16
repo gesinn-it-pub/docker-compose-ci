@@ -7,11 +7,6 @@ IMAGE_NAME := $(extension):test-$(MW_VERSION)-$(SMW_VERSION) # ggf hier Timestam
 
 
 # ======== CI ENV Variables ========
-MW_VERSION ?= 1.35
-SMW_VERSION ?= 4.1.2
-PHP_VERSION ?= 7.4
-DT_VERSION ?= 3.1
-PS_VERSION ?= 0.6.1
 DB_TYPE ?= sqlite
 DB_IMAGE ?= ""
 
@@ -69,7 +64,7 @@ bash: .bash
 .PHONY: .build
 .build:
 	$(show-current-target)
-	$(compose-ci) build wiki
+	$(compose-ci) build --no-cache wiki 
 .PHONY: .up
 .up:
 	$(show-current-target)

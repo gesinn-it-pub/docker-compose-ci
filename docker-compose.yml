@@ -4,6 +4,7 @@ services:
       context: ../
       dockerfile: build/Dockerfile
       args:
+        EXTENSION: ${EXTENSION}
         MW_VERSION: ${MW_VERSION}
         SMW_VERSION: ${SMW_VERSION}
         PHP_VERSION: ${PHP_VERSION}
