@@ -2,12 +2,13 @@ ARG MW_VERSION
 ARG PHP_VERSION
 FROM gesinn/mediawiki-ci:${MW_VERSION}-php${PHP_VERSION}
 
+ARG EXTENSION
+ARG NODE_JS
 ARG MW_VERSION
 ARG SMW_VERSION
 ARG PHP_VERSION
 ARG DT_VERSION
 ARG PS_VERSION
-ARG EXTENSION
 
 ENV EXTENSION=${EXTENSION}
 
@@ -39,7 +40,8 @@ RUN if [ ! -z "${SMW_VERSION}" ]; then \
 
 COPY composer*.json package*.json /var/www/html/extensions/$EXTENSION/
 
-RUN cd extensions/$EXTENSION && composer update && npm install
+RUN cd extensions/$EXTENSION && composer update 
+RUN if [[ -z "$NODE_JS"]] ; then echo no npm ; else npm install
 
 COPY . /var/www/html/extensions/$EXTENSION
 
