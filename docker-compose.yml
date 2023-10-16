@@ -1,0 +1,32 @@
+services:
+  wiki:
+    build:
+      context: ../
+      dockerfile: build/Dockerfile
+      args:
+        MW_VERSION: ${MW_VERSION}
+        SMW_VERSION: ${SMW_VERSION}
+        PHP_VERSION: ${PHP_VERSION}
+        DT_VERSION: ${DT_VERSION}
+        PS_VERSION: ${PS_VERSION}
+    image: ${IMAGE_NAME}
+    
+  mysql:
+    image: ${DB_IMAGE:-mysql:5}
+    environment:
+      - MYSQL_ROOT_PASSWORD=database
+    profiles:
+      - mysql
+
+  postgres:
+    image: ${DB_IMAGE:-postgres:15}
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=database
+    profiles:
+      - postgres
+
+  wait-for:
+    image: mintel/docker-wait-for-it
+    profiles:
+      - no-up
