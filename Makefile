@@ -112,12 +112,15 @@ composer-test-coverage:
 
 .PHONY: npm-test
 npm-test:
-	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && npm run test" 
+	ifdef NODE_JS
+		$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && npm run test"
+	endif
 
 .PHONY: npm-test-coverage
 npm-test-coverage:
-	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && npm run test-coverage" 
-
+	ifdef NODE_JS
+		$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && npm run test-coverage" 
+	endif
 # ======== Dev Targets ========
 
 .PHONY: dev-bash
