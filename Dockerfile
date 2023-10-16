@@ -34,7 +34,7 @@ RUN composer update
 
 
 RUN if [ ! -z "${SMW_VERSION}" ]; then \
-        chown -R www-data:www-data /var/www/html/extensions/SemanticMediaWiki/: \
+        chown -R www-data:www-data /var/www/html/extensions/SemanticMediaWiki/; \
     fi
 
 COPY composer*.json package*.json /var/www/html/extensions/$EXTENSION/
