@@ -101,12 +101,12 @@ bash: .bash
 .PHONY: composer-test
 composer-test:
 	$(show-current-target)
-	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer phpunit"
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer test"
 
 .PHONY: composer-test-coverage
 composer-test-coverage:
 	$(show-current-target)
-	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer phpunit-coverage" 
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer test-coverage" 
 
 .PHONY: npm-test
 npm-test:
