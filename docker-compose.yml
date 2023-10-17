@@ -5,6 +5,7 @@ services:
       dockerfile: build/Dockerfile
       args:
         EXTENSION: ${EXTENSION}
+        COMPOSER_EXT: ${COMPOSER_EXT}
         NODE_JS: ${NODE_JS}
         MW_VERSION: ${MW_VERSION}
         SMW_VERSION: ${SMW_VERSION}
