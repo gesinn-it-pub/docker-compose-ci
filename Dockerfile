@@ -23,11 +23,11 @@ RUN if [ ! -z "${SMW_VERSION}" ]; then \
              'enableSemantics( $wgServer );\n' \
              >> __setup_extension__; \
     fi
-RUN if [ ! -z "$PS_VERSION" ]; then \
+RUN if [ ! -z "${PS_VERSION}" ]; then \
         get-github-extension.sh PageSchemas ${PS_VERSION} && \
         echo 'wfLoadExtension( "PageSchemas" );\n' >> __setup_extension__; \
     fi
-RUN if [ ! -z "$DT_VERSION" ]; then \
+RUN if [ ! -z "${DT_VERSION}" ]; then \
         get-github-extension.sh DisplayTitle ${DT_VERSION} && \
         echo 'wfLoadExtension( "DisplayTitle" );\n' >> __setup_extension__; \
     fi
@@ -41,8 +41,8 @@ RUN if [ ! -z "${SMW_VERSION}" ]; then \
 
 COPY composer*.json package*.json /var/www/html/extensions/$EXTENSION/
 
-RUN if [[ ! -z "$COMPOSER_EXT"]] ; then cd extensions/$EXTENSION && composer update ; fi
-RUN if [[ ! -z "$NODE_JS"]] ; then cd extensions/$EXTENSION && npm install ; fi
+RUN if [ ! -z "${COMPOSER_EXT}"] ; then cd extensions/$EXTENSION && composer update ; fi
+RUN if [ ! -z "${NODE_JS}"] ; then cd extensions/$EXTENSION && npm install ; fi
 
 COPY . /var/www/html/extensions/$EXTENSION
 
