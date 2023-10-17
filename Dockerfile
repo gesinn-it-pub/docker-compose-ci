@@ -40,7 +40,7 @@ RUN if [ ! -z "${SMW_VERSION}" ]; then \
 
 COPY composer*.json package*.json /var/www/html/extensions/$EXTENSION/
 
-RUN cd extensions/$EXTENSION && composer update 
+RUN if [[ ! -z "$COMPOSER"]] ; then cd extensions/$EXTENSION && composer update ; fi
 RUN if [[ ! -z "$NODE_JS"]] ; then cd extensions/$EXTENSION && npm install ; fi
 
 COPY . /var/www/html/extensions/$EXTENSION
