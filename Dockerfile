@@ -3,47 +3,80 @@ ARG PHP_VERSION
 FROM gesinn/mediawiki-ci:${MW_VERSION}-php${PHP_VERSION}
 
 ARG EXTENSION
-ARG COMPOSER_EXT
-ARG NODE_JS
 ARG MW_VERSION
-ARG SMW_VERSION
 ARG PHP_VERSION
-ARG PF_VERSION
-ARG DT_VERSION
-ARG PS_VERSION
-ARG CHAMELEON_VERSION
-
 ENV EXTENSION=${EXTENSION}
 
 # get needed dependencies for this extension
 RUN sed -i s/80/8080/g /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf
 
-
+### SemanticMediaWiki
+ARG SMW_VERSION
 RUN if [ ! -z "${SMW_VERSION}" ]; then \
         composer-require.sh mediawiki/semantic-media-wiki ${SMW_VERSION} && \
         echo 'wfLoadExtension( "SemanticMediaWiki" );\n' \
              'enableSemantics( $wgServer );\n' \
              >> __setup_extension__; \
     fi
+### SemanticMediaWiki
+
+### PageForms
+ARG PF_VERSION
 RUN if [ ! -z "${PF_VERSION}" ]; then \
         get-github-extension.sh PageForms ${PF_VERSION} gesinn-it/mediawiki-extensions-PageForms && \
         echo 'wfLoadExtension( "PageForms" );\n' >> __setup_extension__; \
     fi
+### PageForms
 
+### PageSchemas
+ARG PS_VERSION
 RUN if [ ! -z "${PS_VERSION}" ]; then \
         get-github-extension.sh PageSchemas ${PS_VERSION} && \
         echo 'wfLoadExtension( "PageSchemas" );\n' >> __setup_extension__; \
     fi
+### PageSchemas
+
+### DisplayTitle
+ARG DT_VERSION
 RUN if [ ! -z "${DT_VERSION}" ]; then \
         get-github-extension.sh DisplayTitle ${DT_VERSION} && \
-        echo 'wfLoadExtension( "DisplayTitle" );\n' >> __setup_extension__; \
+        echo 'wfLoadExtension( "c" );\n' >> __setup_extension__; \
     fi
+### DisplayTitle
+
+### AdminLinks
+ARG AL_VERSION
+RUN if [ ! -z "${AL_VERSION}" ]; then \
+        get-github-extension.sh AdminLinks ${AL_VERSION} && \
+        echo 'wfLoadExtension( "AdminLinks" );\n' >> __setup_extension__; \
+    fi
+### AdminLinks
+
+### Maps
+ARG MAPS_VERSION
+RUN if [ ! -z "${MAPS_VERSION}" ]; then \
+        composer-require.sh mediawiki/maps ${MAPS_VERSION} && \
+        echo 'wfLoadExtension( "Maps" );\n' >> __setup_extension__; \
+    fi
+### Maps
+
+### SemanticResultFormats
+ARG SRF_VERSION
+RUN if [ ! -z "${SRF_VERSION}" ]; then \
+        composer-require.sh mediawiki/semantic-result-formats ${SRF_VERSION} && \
+        echo 'wfLoadExtension( "SemanticResultFormats" );\n' >> __setup_extension__; \
+    fi
+### SemanticResultFormats
+
+### chameleon
+ARG CHAMELEON_VERSION
 RUN if [ ! -z "${CHAMELEON_VERSION}" ]; then \
         composer-require.sh mediawiki/chameleon-skin ${CHAMELEON_VERSION} && \
         echo "wfLoadExtension( 'Bootstrap' );\n" \
              "wfLoadSkin( 'chameleon' );\n" \
              "\$wgDefaultSkin='chameleon';\n" \ >> __setup_extension__; \
     fi
+### chameleon
 
 RUN composer update 
 
@@ -54,7 +87,10 @@ RUN if [ ! -z "${SMW_VERSION}" ]; then \
 
 COPY composer*.json package*.json /var/www/html/extensions/$EXTENSION/
 
+ARG COMPOSER_EXT
 RUN if [ ! -z "${COMPOSER_EXT}" ] ; then cd extensions/$EXTENSION && composer install ; fi
+
+ARG NODE_JS
 RUN if [ ! -z "${NODE_JS}" ] ; then cd extensions/$EXTENSION && npm install ; fi
 
 COPY . /var/www/html/extensions/$EXTENSION
