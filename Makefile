@@ -111,13 +111,13 @@ bash: .bash
 
 .PHONY: composer-test
 composer-test:
-ifdef COMPOSE_EXT
+ifdef COMPOSER_EXT
 	$(show-current-target)
 	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer test"
 endif
 .PHONY: composer-test-coverage
 composer-test-coverage:
-ifdef COMPOSE_EXT
+ifdef COMPOSER_EXT
 	$(show-current-target)
 	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer test-coverage" 
 endif
