@@ -41,7 +41,7 @@ RUN if [ ! -z "${PS_VERSION}" ]; then \
 ARG DT_VERSION
 RUN if [ ! -z "${DT_VERSION}" ]; then \
         get-github-extension.sh DisplayTitle ${DT_VERSION} && \
-        echo 'wfLoadExtension( "c" );\n' >> __setup_extension__; \
+        echo 'wfLoadExtension( "DisplayTitle" );\n' >> __setup_extension__; \
     fi
 ### DisplayTitle
 
