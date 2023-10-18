@@ -11,6 +11,7 @@ ARG PHP_VERSION
 ARG PF_VERSION
 ARG DT_VERSION
 ARG PS_VERSION
+ARG CHAMELEON_VERSION
 
 ENV EXTENSION=${EXTENSION}
 
@@ -36,6 +37,11 @@ RUN if [ ! -z "${PS_VERSION}" ]; then \
 RUN if [ ! -z "${DT_VERSION}" ]; then \
         get-github-extension.sh DisplayTitle ${DT_VERSION} && \
         echo 'wfLoadExtension( "DisplayTitle" );\n' >> __setup_extension__; \
+    fi
+RUN if [ ! -z "${CHAMELEON_VERSION}" ]; then \
+        composer-require.sh mediawiki/chameleon-skin ${CHAMELEON_VERSION} && \
+        echo "wfLoadSkin( 'chameleon' );\n" \
+             "\$wgDefaultSkin='chameleon';\n" \ >> __setup_extension__; \
     fi
 
 RUN composer update 

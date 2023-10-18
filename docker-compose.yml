@@ -13,6 +13,7 @@ services:
         PF_VERSION: ${PF_VERSION}
         DT_VERSION: ${DT_VERSION}
         PS_VERSION: ${PS_VERSION}
+        CHAMELEON_VERSION: ${CHAMELEON_VERSION}
     image: ${IMAGE_NAME}
     
   mysql:
