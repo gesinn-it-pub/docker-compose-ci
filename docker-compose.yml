@@ -17,6 +17,7 @@ services:
         AL_VERSION: ${AL_VERSION}
         MAPS_VERSION: ${MAPS_VERSION}
         SRF_VERSION: ${SRF_VERSION}
+        MM_VERSION: ${MM_VERSION}
         CHAMELEON_VERSION: ${CHAMELEON_VERSION}
     image: ${IMAGE_NAME}
     

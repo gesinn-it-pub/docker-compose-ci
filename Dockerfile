@@ -69,6 +69,14 @@ RUN if [ ! -z "${SRF_VERSION}" ]; then \
     fi
 ### SemanticResultFormats
 
+### Mermaid
+ARG MM_VERSION
+RUN if [ ! -z "${MM_VERSION}" ]; then \
+        composer-require.sh mediawiki/mermaid ${MM_VERSION} && \
+        echo 'wfLoadExtension( "Mermaid" );\n' >> __setup_extension__; \
+    fi
+### Mermaid
+
 ### chameleon
 ARG CHAMELEON_VERSION
 RUN if [ ! -z "${CHAMELEON_VERSION}" ]; then \
