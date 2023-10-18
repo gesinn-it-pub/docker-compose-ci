@@ -40,7 +40,8 @@ RUN if [ ! -z "${DT_VERSION}" ]; then \
     fi
 RUN if [ ! -z "${CHAMELEON_VERSION}" ]; then \
         composer-require.sh mediawiki/chameleon-skin ${CHAMELEON_VERSION} && \
-        echo "wfLoadSkin( 'chameleon' );\n" \
+        echo "wfLoadExtension( 'Bootstrap' );\n" \
+             "wfLoadSkin( 'chameleon' );\n" \
              "\$wgDefaultSkin='chameleon';\n" \ >> __setup_extension__; \
     fi
 
