@@ -11,6 +11,7 @@ services:
         SMW_VERSION: ${SMW_VERSION}
         PHP_VERSION: ${PHP_VERSION}
         PF_VERSION: ${PF_VERSION}
+        PF_REPO: ${PF_REPO}
         PS_VERSION: ${PS_VERSION}
         DT_VERSION: ${DT_VERSION}
         AL_VERSION: ${AL_VERSION}

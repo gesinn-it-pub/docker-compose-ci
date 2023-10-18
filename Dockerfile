@@ -22,8 +22,9 @@ RUN if [ ! -z "${SMW_VERSION}" ]; then \
 
 ### PageForms
 ARG PF_VERSION
+ARG PF_REPO
 RUN if [ ! -z "${PF_VERSION}" ]; then \
-        get-github-extension.sh PageForms ${PF_VERSION} gesinn-it/mediawiki-extensions-PageForms && \
+        get-github-extension.sh PageForms ${PF_VERSION} ${PF_REPO} && \
         echo 'wfLoadExtension( "PageForms" );\n' >> __setup_extension__; \
     fi
 ### PageForms
