@@ -94,15 +94,14 @@ RUN if [ ! -z "${SMW_VERSION}" ]; then \
         chown -R www-data:www-data /var/www/html/extensions/SemanticMediaWiki/; \
     fi
 
-COPY composer*.json package*.json /var/www/html/extensions/$EXTENSION/
+COPY . /var/www/html/extensions/$EXTENSION
 
 ARG COMPOSER_EXT
-RUN if [ ! -z "${COMPOSER_EXT}" ] ; then cd extensions/$EXTENSION && composer install ; fi
+RUN if [ ! -z "${COMPOSER_EXT}" ] ; then cd extensions/$EXTENSION && composer update ; fi
 
 ARG NODE_JS
 RUN if [ ! -z "${NODE_JS}" ] ; then cd extensions/$EXTENSION && npm install ; fi
 
-COPY . /var/www/html/extensions/$EXTENSION
 
 RUN echo \
         "wfLoadExtension( '$EXTENSION' );\n" \
