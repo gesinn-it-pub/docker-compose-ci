@@ -10,34 +10,32 @@ IMAGE_NAME := $(extension):test-$(MW_VERSION)-$(SMW_VERSION) # ggf hier Timestam
 DB_TYPE ?= sqlite
 DB_IMAGE ?= ""
 
-
-environment = IMAGE_NAME=$(IMAGE_NAME) \
-EXTENSION=$(EXTENSION)  \
-NODE_JS=$(NODE_JS)  \
-COMPOSER_EXT=$(COMPOSER_EXT) \
-MW_VERSION=$(MW_VERSION)  \
-SMW_VERSION=$(SMW_VERSION) \
-PHP_VERSION=$(PHP_VERSION) \
-PF_VERSION=$(PF_VERSION) \
-PS_VERSION=$(PS_VERSION) \
-DT_VERSION=$(DT_VERSION) \
-AL_VERSION=$(AL_VERSION) \
-MAPS_VERSION=$(MAPS_VERSION) \
-SRF_VERSION=$(SRF_VERSION) \
-CHAMELEON_VERSION=$(CHAMELEON_VERSION) \
-DB_TYPE=$(DB_TYPE) \
-DB_IMAGE=$(DB_IMAGE) \
-EXTENSION_FOLDER=$(EXTENSION_FOLDER)
-
+export IMAGE_NAME
+export EXTENSION
+export NODE_JS
+export COMPOSER_EXT
+export MW_VERSION
+export SMW_VERSION
+export PHP_VERSION
+export PF_VERSION
+export PS_VERSION
+export DT_VERSION
+export AL_VERSION
+export MAPS_VERSION
+export SRF_VERSION
+export CHAMELEON_VERSION
+export DB_TYPE
+export DB_IMAGE
+export EXTENSION_FOLDER
 
 ifneq (,$(wildcard ./build/docker-compose.override.yml))
      COMPOSE_OVERRIDE=-f build/docker-compose.override.yml
 endif
 
 
-compose = $(environment) docker-compose -f build/docker-compose.yml $(COMPOSE_OVERRIDE) $(COMPOSE_ARGS)
-compose-ci = $(environment) docker-compose -f build/docker-compose.yml -f build/docker-compose-ci.yml $(COMPOSE_OVERRIDE) $(COMPOSE_ARGS)
-compose-dev = $(environment) docker-compose -f build/docker-compose.yml -f build/docker-compose-dev.yml $(COMPOSE_OVERRIDE) $(COMPOSE_ARGS)
+compose = docker-compose -f build/docker-compose.yml $(COMPOSE_OVERRIDE) $(COMPOSE_ARGS)
+compose-ci = docker-compose -f build/docker-compose.yml -f build/docker-compose-ci.yml $(COMPOSE_OVERRIDE) $(COMPOSE_ARGS)
+compose-dev = docker-compose -f build/docker-compose.yml -f build/docker-compose-dev.yml $(COMPOSE_OVERRIDE) $(COMPOSE_ARGS)
 
 compose-run = $(compose) run -T --rm
 compose-exec-wiki = $(compose) exec -T wiki
