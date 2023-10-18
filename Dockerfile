@@ -8,6 +8,7 @@ ARG NODE_JS
 ARG MW_VERSION
 ARG SMW_VERSION
 ARG PHP_VERSION
+ARG PF_VERSION
 ARG DT_VERSION
 ARG PS_VERSION
 
@@ -23,6 +24,11 @@ RUN if [ ! -z "${SMW_VERSION}" ]; then \
              'enableSemantics( $wgServer );\n' \
              >> __setup_extension__; \
     fi
+RUN if [ ! -z "${PF_VERSION}" ]; then \
+        get-github-extension.sh PageForms ${PF_VERSION} gesinn-it/mediawiki-extensions-PageForms && \
+        echo 'wfLoadExtension( "PageForms" );\n' >> __setup_extension__; \
+    fi
+
 RUN if [ ! -z "${PS_VERSION}" ]; then \
         get-github-extension.sh PageSchemas ${PS_VERSION} && \
         echo 'wfLoadExtension( "PageSchemas" );\n' >> __setup_extension__; \

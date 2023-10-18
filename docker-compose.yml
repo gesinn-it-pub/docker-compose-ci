@@ -10,6 +10,7 @@ services:
         MW_VERSION: ${MW_VERSION}
         SMW_VERSION: ${SMW_VERSION}
         PHP_VERSION: ${PHP_VERSION}
+        PF_VERSION: ${PF_VERSION}
         DT_VERSION: ${DT_VERSION}
         PS_VERSION: ${PS_VERSION}
     image: ${IMAGE_NAME}
