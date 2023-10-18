@@ -58,6 +58,6 @@ RUN echo \
 
 COPY *__setup_extension__ setup_extension
 
-RUN if [ ! -f setup_extension ]; then \
+RUN if [ -f setup_extension ]; then \
         cat setup_extension >> __setup_extension__; \
     fi
