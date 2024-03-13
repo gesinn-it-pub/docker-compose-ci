@@ -18,6 +18,31 @@ git submodule update
 git submodule update --init --remote
 ----
 
+=== Run tests locally
+Ensure, you have `Make` and `Docker` installed.
+
+----
+make ci
+----
+
+Run all tests with more detailed output and coverage:
+----
+make ci-coverage
+----
+
+After the tests have been executed, the containers continue to run in order to carry out analyses in the containers if necessary:
+----
+docker ps
+
+CONTAINER ID   IMAGE                                   COMMAND                  CREATED          STATUS          PORTS     NAMES
+8c8606f87631   semanticresultformats:test-1.35-4.1.3   "docker-php-entrypoi…"   25 minutes ago   Up 25 minutes   80/tcp    semanticresultformats-sqlite-wiki-1
+----
+
+Stop the containers:
+----
+make down
+----
+
 === Currently supported required extensions
 Extensions usually required by other extensions are already included and can be used with versions specified by variables.
 
