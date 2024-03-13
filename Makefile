@@ -37,9 +37,9 @@ ifneq (,$(wildcard ./build/docker-compose.override.yml))
 endif
 
 
-compose = $(environment) docker-compose -f build/docker-compose.yml $(COMPOSE_OVERRIDE) $(COMPOSE_ARGS)
-compose-ci = $(environment) docker-compose -f build/docker-compose.yml -f build/docker-compose-ci.yml $(COMPOSE_OVERRIDE) $(COMPOSE_ARGS)
-compose-dev = $(environment) docker-compose -f build/docker-compose.yml -f build/docker-compose-dev.yml $(COMPOSE_OVERRIDE) $(COMPOSE_ARGS)
+compose = $(environment) docker compose -f build/docker-compose.yml $(COMPOSE_OVERRIDE) $(COMPOSE_ARGS)
+compose-ci = $(environment) docker compose -f build/docker-compose.yml -f build/docker-compose-ci.yml $(COMPOSE_OVERRIDE) $(COMPOSE_ARGS)
+compose-dev = $(environment) docker compose -f build/docker-compose.yml -f build/docker-compose-dev.yml $(COMPOSE_OVERRIDE) $(COMPOSE_ARGS)
 
 compose-run = $(compose) run -T --rm
 compose-exec-wiki = $(compose) exec -T wiki
