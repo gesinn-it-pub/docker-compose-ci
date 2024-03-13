@@ -7,6 +7,17 @@ This repository is to be integrated into other repositories as a Git submodule. 
 
 Example https://github.com/SemanticMediaWiki/SemanticResultFormats/blob/master/Makefile[Makefile in SemanticResultFormats]
 
+=== Init submodule
+----
+git submodule init
+git submodule update
+----
+
+=== Update submodule
+----
+git submodule update --init --remote
+----
+
 === Currently supported required extensions
 Extensions usually required by other extensions are already included and can be used with versions specified by variables.
 
