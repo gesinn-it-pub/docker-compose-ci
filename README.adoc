@@ -1,0 +1,26 @@
+= docker-compose-ci
+
+_"Docker Compose"_ based CI and testing for MediaWiki extensions.
+
+== Usage
+This repository is to be integrated into other repositories as a Git submodule. It uses _"Make"_ as main entry point and command line interface. The `Makefile` contained in this repository must be called up from a Makefile in the other repository.
+
+Example https://github.com/SemanticMediaWiki/SemanticResultFormats/blob/master/Makefile[Makefile in SemanticResultFormats]
+
+=== Currently supported required extensions
+Extensions usually required by other extensions are already included and can be used with versions specified by variables.
+
+.Supported required extensions
+|===
+| Extension | Variable
+
+| AdminLinks | `AL_VERSION`
+| Chameleon | `CHAMELEON_VERSION`
+| DisplayTitle | `DT_VERSION`
+| Maps | `MAPS_VERSION`
+| Mermaid | `MM_VERSION`
+| PageForms | `PF_VERSION`, `PF_REPO` (alternate repo URL)
+| PageSchemas | `PS_VERSION`
+| SemanticMediaWiki | `SMW_VERSION`
+| SemanticResultFormats | `SRF_VERSION`
+|===
