@@ -110,25 +110,25 @@ bash: .bash
 # ======== Test Targets ========
 
 .PHONY: composer-test
-composer-test:
+composer-test: .init
 ifdef COMPOSER_EXT
 	$(show-current-target)
 	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer test"
 endif
 .PHONY: composer-test-coverage
-composer-test-coverage:
+composer-test-coverage: .init
 ifdef COMPOSER_EXT
 	$(show-current-target)
 	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer test-coverage" 
 endif
 .PHONY: npm-test
-npm-test:
+npm-test: .init
 ifdef NODE_JS
 	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && npm run test"
 endif
 
 .PHONY: npm-test-coverage
-npm-test-coverage:
+npm-test-coverage: .init
 ifdef NODE_JS
 	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && npm run test-coverage" 
 endif
