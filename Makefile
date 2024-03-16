@@ -105,7 +105,7 @@ bash: .bash
 .PHONY: .bash
 .bash: .init
 	$(show-current-target)
-	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && bash"
+	$(compose) exec wiki bash -c "cd $(EXTENSION_FOLDER) && bash"
 
 # ======== Test Targets ========
 
