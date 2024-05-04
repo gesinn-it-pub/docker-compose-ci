@@ -4,21 +4,22 @@ services:
       context: ../
       dockerfile: build/Dockerfile
       args:
-        EXTENSION: ${EXTENSION}
-        COMPOSER_EXT: ${COMPOSER_EXT}
-        NODE_JS: ${NODE_JS}
-        MW_VERSION: ${MW_VERSION}
-        SMW_VERSION: ${SMW_VERSION}
-        PHP_VERSION: ${PHP_VERSION}
-        PF_VERSION: ${PF_VERSION}
-        PF_REPO: ${PF_REPO}
-        PS_VERSION: ${PS_VERSION}
-        DT_VERSION: ${DT_VERSION}
         AL_VERSION: ${AL_VERSION}
-        MAPS_VERSION: ${MAPS_VERSION}
-        SRF_VERSION: ${SRF_VERSION}
-        MM_VERSION: ${MM_VERSION}
         CHAMELEON_VERSION: ${CHAMELEON_VERSION}
+        COMPOSER_EXT: ${COMPOSER_EXT}
+        DT_VERSION: ${DT_VERSION}
+        EXTENSION: ${EXTENSION}
+        MAPS_VERSION: ${MAPS_VERSION}
+        MM_VERSION: ${MM_VERSION}
+        MW_INSTALL_PATH: ${MW_INSTALL_PATH}
+        MW_VERSION: ${MW_VERSION}
+        NODE_JS: ${NODE_JS}
+        PF_REPO: ${PF_REPO}
+        PF_VERSION: ${PF_VERSION}
+        PHP_VERSION: ${PHP_VERSION}
+        PS_VERSION: ${PS_VERSION}
+        SMW_VERSION: ${SMW_VERSION}
+        SRF_VERSION: ${SRF_VERSION}
     image: ${IMAGE_NAME}
     
   mysql:
