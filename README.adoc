@@ -3,11 +3,26 @@
 _"Docker Compose"_ based CI and testing for MediaWiki extensions, built from https://hub.docker.com/r/gesinn/mediawiki-ci/tags[mediawiki-ci images].
 
 == Usage
-This repository is to be integrated into other repositories as a Git submodule. It uses _"Make"_ as main entry point and command line interface. The `Makefile` contained in this repository must be called up from a Makefile in the other repository.
+The _docker-compose-ci_ repository is to be integrated into other repositories as a Git submodule. It uses _"Make"_ as main entry point and command line interface. The `Makefile` contained in this repository must be called up from a Makefile in the other repository.
 
 Example https://github.com/SemanticMediaWiki/SemanticResultFormats/blob/master/Makefile[Makefile in SemanticResultFormats]
 
+=== Add submodule
+Before docker-compose-ci can be used, the repository must be added as a git submodule to an existing repository:
+----
+git submodule add https://github.com/gesinn-it-pub/docker-compose-ci.git build
+----
+This is only necessary if it has not already been done.
+
 === Init submodule
+After adding the submodule, cloning the repository with the `--recursive` option is required from now on.
+
+----
+git clone --recursive <REPO>
+----
+
+If not done when cloning, it can be done by
+
 ----
 git submodule init
 git submodule update
