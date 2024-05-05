@@ -3,9 +3,11 @@ ARG PHP_VERSION
 FROM gesinn/mediawiki-ci:${MW_VERSION}-php${PHP_VERSION}
 
 ARG EXTENSION
+ARG MW_INSTALL_PATH
 ARG MW_VERSION
 ARG PHP_VERSION
 ENV EXTENSION=${EXTENSION}
+ENV MW_INSTALL_PATH=${MW_INSTALL_PATH}
 
 # get needed dependencies for this extension
 RUN sed -i s/80/8080/g /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf

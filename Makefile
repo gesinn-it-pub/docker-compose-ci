@@ -9,27 +9,29 @@ IMAGE_NAME := $(extension):test-$(MW_VERSION)-$(SMW_VERSION) # ggf hier Timestam
 # ======== CI ENV Variables ========
 DB_TYPE ?= sqlite
 DB_IMAGE ?= ""
+MW_INSTALL_PATH ?= /var/www/html
 
-
-environment = IMAGE_NAME=$(IMAGE_NAME) \
-EXTENSION=$(EXTENSION)  \
-NODE_JS=$(NODE_JS)  \
-COMPOSER_EXT=$(COMPOSER_EXT) \
-MW_VERSION=$(MW_VERSION)  \
-SMW_VERSION=$(SMW_VERSION) \
-PHP_VERSION=$(PHP_VERSION) \
-PF_VERSION=$(PF_VERSION) \
-PF_REPO=$(PF_REPO) \
-PS_VERSION=$(PS_VERSION) \
-DT_VERSION=$(DT_VERSION) \
+environment = \
 AL_VERSION=$(AL_VERSION) \
-MAPS_VERSION=$(MAPS_VERSION) \
-SRF_VERSION=$(SRF_VERSION) \
-MM_VERSION=$(MM_VERSION) \
 CHAMELEON_VERSION=$(CHAMELEON_VERSION) \
-DB_TYPE=$(DB_TYPE) \
+COMPOSER_EXT=$(COMPOSER_EXT) \
 DB_IMAGE=$(DB_IMAGE) \
-EXTENSION_FOLDER=$(EXTENSION_FOLDER)
+DB_TYPE=$(DB_TYPE) \
+DT_VERSION=$(DT_VERSION) \
+EXTENSION=$(EXTENSION)  \
+EXTENSION_FOLDER=$(EXTENSION_FOLDER) \
+IMAGE_NAME=$(IMAGE_NAME) \
+MAPS_VERSION=$(MAPS_VERSION) \
+MM_VERSION=$(MM_VERSION) \
+MW_INSTALL_PATH=$(MW_INSTALL_PATH) \
+MW_VERSION=$(MW_VERSION)  \
+NODE_JS=$(NODE_JS)  \
+PF_REPO=$(PF_REPO) \
+PF_VERSION=$(PF_VERSION) \
+PHP_VERSION=$(PHP_VERSION) \
+PS_VERSION=$(PS_VERSION) \
+SMW_VERSION=$(SMW_VERSION) \
+SRF_VERSION=$(SRF_VERSION) \
 
 
 ifneq (,$(wildcard ./build/docker-compose.override.yml))
@@ -87,7 +89,7 @@ bash: .bash
 	$(compose-exec-wiki) bash -c "sudo -u www-data \
 		php maintenance/install.php \
 		    --pass=wiki4everyone --server=http://localhost:8080 --scriptpath='' \
-    		--dbname=wiki --dbuser=wiki --dbpass=wiki $(WIKI_DB_CONFIG) wiki WikiSysop && \
+		    --dbname=wiki --dbuser=wiki --dbpass=wiki $(WIKI_DB_CONFIG) wiki WikiSysop && \
 		cat __setup_extension__ >> LocalSettings.php && \
 		sudo -u www-data php maintenance/update.php --skip-external-dependencies --quick \
 		"
