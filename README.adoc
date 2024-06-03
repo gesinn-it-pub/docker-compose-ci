@@ -58,6 +58,12 @@ Stop the containers:
 make down
 ----
 
+If you want to run specific targets, bash into the running container and run command runner targets as required:
+----
+make bash
+> composer phpcs
+----
+
 === Currently supported required extensions
 Extensions usually required by other extensions are already included and can be used with versions specified by variables.
 
