@@ -57,6 +57,9 @@ ci: install composer-test npm-test
 .PHONY: ci-coverage
 ci-coverage: install composer-test-coverage npm-test-coverage
 
+.PHONY: fix
+fix: install composer-fix
+
 .PHONY: install
 install: destroy up .install
 
@@ -122,6 +125,12 @@ composer-test-coverage: .init
 ifdef COMPOSER_EXT
 	$(show-current-target)
 	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer test-coverage" 
+endif
+.PHONY: composer-fix
+composer-fix: .init
+ifdef COMPOSER_EXT
+	$(show-current-target)
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer fix" 
 endif
 .PHONY: npm-test
 npm-test: .init
