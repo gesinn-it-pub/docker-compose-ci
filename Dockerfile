@@ -106,7 +106,7 @@ ARG OS_PACKAGES
 RUN if [ ! -z "${OS_PACKAGES}" ] ; then apt-get update && apt-get install -y $OS_PACKAGES ; fi
 
 ARG PHP_EXTENSIONS
-RUN if [ ! -z "${PHP_EXTENSIONS}" ] ; then docker-php-ext-install -j $PHP_EXTENSIONS ; fi
+RUN if [ ! -z "${PHP_EXTENSIONS}" ] ; then docker-php-ext-install $PHP_EXTENSIONS ; fi
 
 ARG COMPOSER_EXT
 RUN if [ ! -z "${COMPOSER_EXT}" ] ; then cd extensions/$EXTENSION && composer update ; fi
