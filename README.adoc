@@ -88,6 +88,7 @@ Extensions usually required by other extensions are already included and can be 
 | Variable | Description
 
 | MW_VERSION | https://hub.docker.com/r/gesinn/mediawiki-ci/tags[Docker image MediaWiki Version]
+| PHP_EXTENSIONS | List of PHP extensions to be installed
 | PHP_VERSION | https://hub.docker.com/r/gesinn/mediawiki-ci/tags[Docker image PHP Version]
 | DB_TYPE | Database type (mysql, postgres, sqlite)
 | DB_IMAGE | Database Docker image (mysql and postgres only), for example `mysql:5`
