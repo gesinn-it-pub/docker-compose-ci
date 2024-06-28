@@ -16,6 +16,7 @@ services:
         NODE_JS: ${NODE_JS}
         PF_REPO: ${PF_REPO}
         PF_VERSION: ${PF_VERSION}
+        PHP_EXTENSIONS: ${PHP_EXTENSIONS}
         PHP_VERSION: ${PHP_VERSION}
         PS_VERSION: ${PS_VERSION}
         SMW_VERSION: ${SMW_VERSION}

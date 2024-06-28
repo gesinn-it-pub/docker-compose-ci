@@ -6,8 +6,10 @@ ARG EXTENSION
 ARG MW_INSTALL_PATH
 ARG MW_VERSION
 ARG PHP_VERSION
+ARG PHP_EXTENSIONS
 ENV EXTENSION=${EXTENSION}
 ENV MW_INSTALL_PATH=${MW_INSTALL_PATH}
+ENV PHP_EXTENSIONS=${PHP_EXTENSIONS}
 
 # get needed dependencies for this extension
 RUN sed -i s/80/8080/g /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf
@@ -97,6 +99,9 @@ RUN if [ ! -z "${SMW_VERSION}" ]; then \
     fi
 
 COPY . /var/www/html/extensions/$EXTENSION
+
+ARG PHP_EXTENSIONS
+RUN if [ ! -z "${PHP_EXTENSIONS}" ] ; then docker-php-ext-install -j $PHP_EXTENSIONS ; fi
 
 ARG COMPOSER_EXT
 RUN if [ ! -z "${COMPOSER_EXT}" ] ; then cd extensions/$EXTENSION && composer update ; fi
