@@ -95,12 +95,11 @@ RUN if [ ! -z "${CHAMELEON_VERSION}" ]; then \
 
 RUN composer update 
 
+COPY . /var/www/html/extensions/$EXTENSION
 
-RUN if [ ! -z "${SMW_VERSION}" ]; then \
+RUN if [ ! -z "${SMW_VERSION}" ] || [ "${EXTENSION}" = "SemanticMediaWiki" ]; then \
         chown -R www-data:www-data /var/www/html/extensions/SemanticMediaWiki/; \
     fi
-
-COPY . /var/www/html/extensions/$EXTENSION
 
 ARG OS_PACKAGES
 RUN if [ ! -z "${OS_PACKAGES}" ] ; then apt-get update && apt-get install -y $OS_PACKAGES ; fi
@@ -114,6 +113,12 @@ RUN if [ ! -z "${COMPOSER_EXT}" ] ; then cd extensions/$EXTENSION && composer up
 ARG NODE_JS
 RUN if [ ! -z "${NODE_JS}" ] ; then cd extensions/$EXTENSION && npm install ; fi
 
+# special handling for testing SMW itself
+RUN if [ "${EXTENSION}" = "SemanticMediaWiki" ]; then \
+        COMPOSER=composer.local.json composer require --no-update --working-dir ${MW_INSTALL_PATH} mediawiki/semantic-media-wiki @dev && \
+        COMPOSER=composer.local.json composer config repositories.semantic-media-wiki '{"type": "path", "url": "extensions/SemanticMediaWiki"}' --working-dir ${MW_INSTALL_PATH} && \
+        composer update --working-dir ${MW_INSTALL_PATH}; \
+    fi
 
 RUN echo \
         "wfLoadExtension( '$EXTENSION' );\n" \
