@@ -45,6 +45,11 @@ Run all tests with more detailed output and coverage:
 make ci-coverage
 ----
 
+Run tests with parameters passed to composer commands, e.g. to run only certain testsuites
+----
+make ci COMPOSER_PARAMS="-- --testsuite=semantic-mediawiki-unit"
+----
+
 After the tests have been executed, the containers continue to run in order to carry out analyses in the containers if necessary:
 ----
 docker ps
