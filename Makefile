@@ -51,6 +51,9 @@ show-current-target = @echo; echo "======= $@ ========"
 # ======== CI ========
 # ======== Global Targets ========
 
+.PHONY: analyze
+analyze: install composer-analyze
+
 .PHONY: ci
 ci: install composer-test npm-test
 
@@ -112,6 +115,15 @@ bash: .bash
 .bash: .init
 	$(show-current-target)
 	$(compose) exec wiki bash -c "cd $(EXTENSION_FOLDER) && bash"
+
+# ======== Analyze Targets ========
+
+.PHONY: composer-analyze
+composer-analyze: .init
+ifdef COMPOSER_EXT
+	$(show-current-target)
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer analyze $(COMPOSER_PARAMS)"
+endif
 
 # ======== Test Targets ========
 
