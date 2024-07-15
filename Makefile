@@ -119,21 +119,21 @@ bash: .bash
 composer-test: .init
 ifdef COMPOSER_EXT
 	$(show-current-target)
-	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer test"
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer test $(COMPOSER_PARAMS)"
 endif
 
 .PHONY: composer-test-coverage
 composer-test-coverage: .init
 ifdef COMPOSER_EXT
 	$(show-current-target)
-	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer test-coverage" 
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer test-coverage $(COMPOSER_PARAMS)" 
 endif
 
 .PHONY: composer-fix
 composer-fix: .init
 ifdef COMPOSER_EXT
 	$(show-current-target)
-	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer fix" 
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer fix $(COMPOSER_PARAMS)" 
 endif
 
 .PHONY: npm-test
