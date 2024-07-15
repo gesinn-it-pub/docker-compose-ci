@@ -1,5 +1,3 @@
-
-
 # ======== Naming ========
 EXTENSION_FOLDER := /var/www/html/extensions/$(EXTENSION)
 extension := $(shell echo $(EXTENSION) | tr A-Z a-z})
@@ -82,7 +80,8 @@ bash: .bash
 .PHONY: .build
 .build:
 	$(show-current-target)
-	$(compose-ci) build --no-cache wiki 
+	$(compose-ci) build --no-cache wiki
+
 .PHONY: .up
 .up:
 	$(show-current-target)
@@ -122,18 +121,21 @@ ifdef COMPOSER_EXT
 	$(show-current-target)
 	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer test"
 endif
+
 .PHONY: composer-test-coverage
 composer-test-coverage: .init
 ifdef COMPOSER_EXT
 	$(show-current-target)
 	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer test-coverage" 
 endif
+
 .PHONY: composer-fix
 composer-fix: .init
 ifdef COMPOSER_EXT
 	$(show-current-target)
 	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer fix" 
 endif
+
 .PHONY: npm-test
 npm-test: .init
 ifdef NODE_JS
@@ -145,6 +147,7 @@ npm-test-coverage: .init
 ifdef NODE_JS
 	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && npm run test-coverage" 
 endif
+
 # ======== Dev Targets ========
 
 .PHONY: dev-bash
