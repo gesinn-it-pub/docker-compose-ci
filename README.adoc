@@ -45,9 +45,12 @@ Run all tests with more detailed output and coverage:
 make ci-coverage
 ----
 
-Run tests with parameters passed to composer commands, e.g. to run only certain testsuites
+Run tests with parameters passed to composer commands, e.g. to run only certain testsuites or single tests
 ----
 make ci COMPOSER_PARAMS="-- --testsuite=semantic-mediawiki-unit"
+----
+----
+make ci COMPOSER_PARAMS="-- --filter SMWQueryProcessorTest"
 ----
 
 After the tests have been executed, the containers continue to run in order to carry out analyses in the containers if necessary:
