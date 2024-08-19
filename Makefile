@@ -45,6 +45,7 @@ compose-dev = $(environment) docker compose -f build/docker-compose.yml -f build
 
 compose-run = $(compose) run -T --rm
 compose-exec-wiki = $(compose) exec -T wiki
+compose-exec-wiki-ci = $(compose-ci) exec -T wiki
 
 show-current-target = @echo; echo "======= $@ ========"
 
@@ -89,6 +90,7 @@ bash: .bash
 .up:
 	$(show-current-target)
 	$(compose-ci) up -d
+	$(compose-exec-wiki-ci) bash -c "rm -r -f coverage"
 
 .PHONY: .install
 .install: .wait-for-db
@@ -138,7 +140,7 @@ endif
 composer-test-coverage: .init
 ifdef COMPOSER_EXT
 	$(show-current-target)
-	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer test-coverage $(COMPOSER_PARAMS)" 
+	$(compose-exec-wiki-ci) bash -c "cd $(EXTENSION_FOLDER) && composer test-coverage $(COMPOSER_PARAMS) && composer post-test-coverage > /dev/null 2>&1 || true"
 endif
 
 .PHONY: composer-fix
