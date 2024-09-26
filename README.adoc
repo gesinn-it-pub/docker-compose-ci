@@ -96,6 +96,7 @@ Extensions usually required by other extensions are already included and can be 
 | Mermaid | `MM_VERSION`
 | PageForms | `PF_VERSION`, `PF_REPO` (alternate repo URL)
 | PageSchemas | `PS_VERSION`
+| Lingo | `LINGO_VERSION`
 | SemanticMediaWiki | `SMW_VERSION`
 | SemanticResultFormats | `SRF_VERSION`
 |===

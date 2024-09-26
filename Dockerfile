@@ -83,6 +83,14 @@ RUN if [ ! -z "${MM_VERSION}" ]; then \
     fi
 ### Mermaid
 
+### Lingo
+ARG LINGO_VERSION
+RUN if [ ! -z "${LINGO_VERSION}" ]; then \
+        composer-require.sh mediawiki/lingo ${LINGO_VERSION} && \
+        echo 'wfLoadExtension( "Lingo" );\n' >> __setup_extension__; \
+    fi
+### Lingo
+
 ### chameleon
 ARG CHAMELEON_VERSION
 RUN if [ ! -z "${CHAMELEON_VERSION}" ]; then \
