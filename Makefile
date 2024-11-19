@@ -196,6 +196,15 @@ ifndef GH_API_TOKEN
 	$(error GH_API_TOKEN is not set)
 endif
 
+# ======== Develop ========
+
+.PHONY: prepare-dev
+prepare-dev: .init
+	$(show-current-target)
+	$(compose-exec-wiki) bash -c "sed -i 's|/var/www/html/\(.*\)|$(EXTENSION_FOLDER)/|' /tools/prepare-dev.sh"
+	$(compose-exec-wiki) bash -c "bash prepare-dev.sh"
+
+	@echo "Xdebug has been configured successfully."
 
 # ======== Helpers ========
 .PHONY: .init
