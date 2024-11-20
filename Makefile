@@ -202,6 +202,7 @@ endif
 prepare-dev: .init
 	$(show-current-target)
 	$(compose-exec-wiki) bash -c "sed -i 's|/var/www/html/\(.*\)|$(EXTENSION_FOLDER)/|' /tools/prepare-dev.sh"
+	$(compose-exec-wiki) bash -c "sed -i 's|/var/www/html\(.*\)|${EXTENSION_FOLDER}\1|' /tools/files/.vscode/launch.json"
 	$(compose-exec-wiki) bash -c "bash prepare-dev.sh"
 
 	@echo "Xdebug has been configured successfully."
