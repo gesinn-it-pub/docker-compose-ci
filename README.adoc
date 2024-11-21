@@ -70,6 +70,7 @@ If you want to run specific targets, bash into the running container and run com
 ----
 make bash
 > composer phpcs
+> composer phpunit -- --filter='header-footer.json'
 ----
 
 === Access the wiki from your browser ===
