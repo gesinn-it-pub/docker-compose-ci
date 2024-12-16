@@ -155,7 +155,7 @@ ifdef COMPOSER_EXT
 endif
 
 .PHONY: composer-phpunit
-composer-fix: .init
+composer-phpunit: .init
 ifdef COMPOSER_EXT
 	$(show-current-target)
 	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer phpunit $(COMPOSER_PARAMS)" 
