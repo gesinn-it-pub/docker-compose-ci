@@ -137,10 +137,8 @@ composer-lint: .init
 
 .PHONY: composer-test
 composer-test: .init
-ifdef COMPOSER_EXT
 	$(show-current-target)
-	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer test $(COMPOSER_PARAMS)"
-endif
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer test"
 
 .PHONY: composer-test-coverage
 composer-test-coverage: .init
