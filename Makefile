@@ -57,7 +57,7 @@ show-current-target = @echo; echo "======= $@ ========"
 analyze: install composer-analyze
 
 .PHONY: ci
-ci: install composer-lint composer-test npm-test
+ci: install composer-test composer-phpunit npm-test
 
 .PHONY: ci-coverage
 ci-coverage: install composer-test-coverage npm-test-coverage
@@ -154,6 +154,13 @@ composer-fix: .init
 ifdef COMPOSER_EXT
 	$(show-current-target)
 	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer fix $(COMPOSER_PARAMS)" 
+endif
+
+.PHONY: composer-phpunit
+composer-fix: .init
+ifdef COMPOSER_EXT
+	$(show-current-target)
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer phpunit $(COMPOSER_PARAMS)" 
 endif
 
 .PHONY: npm-test
