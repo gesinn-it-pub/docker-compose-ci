@@ -57,7 +57,10 @@ show-current-target = @echo; echo "======= $@ ========"
 analyze: install composer-analyze
 
 .PHONY: ci
-ci: install composer-test composer-phpunit npm-test
+ci: install composer-test
+
+.PHONY: ci-phpunit
+ci-phpunit: install composer-phpunit npm-test
 
 .PHONY: ci-coverage
 ci-coverage: install composer-test-coverage npm-test-coverage
