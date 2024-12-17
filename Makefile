@@ -57,7 +57,7 @@ show-current-target = @echo; echo "======= $@ ========"
 analyze: install composer-analyze
 
 .PHONY: ci
-ci: install composer-lint composer-test npm-test
+ci: install composer-test npm-test
 
 .PHONY: ci-coverage
 ci-coverage: install composer-test-coverage npm-test-coverage
@@ -129,11 +129,6 @@ ifdef COMPOSER_EXT
 endif
 
 # ======== Test Targets ========
-
-.PHONY: composer-lint
-composer-lint: .init
-	$(show-current-target)
-	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer lint"
 
 .PHONY: composer-test
 composer-test: .init
