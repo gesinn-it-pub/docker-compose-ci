@@ -154,11 +154,18 @@ ifdef COMPOSER_EXT
 	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer fix $(COMPOSER_PARAMS)" 
 endif
 
-.PHONY: composer-phpunit
-composer-phpunit: .init
+.PHONY: composer-phpunit-unit
+composer-phpunit-unit: .init
 ifdef COMPOSER_EXT
 	$(show-current-target)
-	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer phpunit $(COMPOSER_PARAMS)" 
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer phpunit:unit" 
+endif
+
+.PHONY: composer-phpunit-integration
+composer-phpunit-integration: .init
+ifdef COMPOSER_EXT
+	$(show-current-target)
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer phpunit:integration" 
 endif
 
 .PHONY: npm-test
