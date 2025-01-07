@@ -91,6 +91,14 @@ RUN if [ ! -z "${LINGO_VERSION}" ]; then \
     fi
 ### Lingo
 
+### Scribunto
+ARG SCRIBUNTO_VERSION
+RUN if [ ! -z "${SCRIBUNTO_VERSION}" ]; then \
+        get-github-extension.sh Scribunto ${SCRIBUNTO_VERSION} && \
+        echo 'wfLoadExtension( "Scribunto" );\n' >> __setup_extension__; \
+    fi
+### Scribunto
+
 ### chameleon
 ARG CHAMELEON_VERSION
 RUN if [ ! -z "${CHAMELEON_VERSION}" ]; then \
