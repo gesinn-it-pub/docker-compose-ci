@@ -59,6 +59,14 @@ RUN if [ ! -z "${AL_VERSION}" ]; then \
     fi
 ### AdminLinks
 
+### ApprovedRevs
+ARG AR_VERSION
+RUN if [ ! -z "${AR_VERSION}" ]; then \
+        get-github-extension.sh ApprovedRevs ${AR_VERSION} && \
+        echo 'wfLoadExtension( "ApprovedRevs" );\n' >> __setup_extension__; \
+    fi
+### ApprovedRevs
+
 ### Maps
 ARG MAPS_VERSION
 RUN if [ ! -z "${MAPS_VERSION}" ]; then \
