@@ -91,6 +91,7 @@ Extensions usually required by other extensions are already included and can be 
 | Extension | Variable
 
 | AdminLinks | `AL_VERSION`
+| ApprovedRevs | `AR_VERSION`
 | Chameleon | `CHAMELEON_VERSION`
 | DisplayTitle | `DT_VERSION`
 | Maps | `MAPS_VERSION`
