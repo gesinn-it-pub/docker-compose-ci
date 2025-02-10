@@ -5,6 +5,7 @@ services:
       dockerfile: build/Dockerfile
       args:
         AL_VERSION: ${AL_VERSION}
+        AR_VERSION: ${AR_VERSION}
         CHAMELEON_VERSION: ${CHAMELEON_VERSION}
         COMPOSER_EXT: ${COMPOSER_EXT}
         DT_VERSION: ${DT_VERSION}
