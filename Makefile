@@ -132,6 +132,13 @@ endif
 
 # ======== Test Targets ========
 
+.PHONY: composer-phpunit
+composer-phpunit: .init
+ifdef COMPOSER_EXT
+	$(show-current-target)
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer phpunit $(COMPOSER_PARAMS)"
+endif
+
 .PHONY: composer-test
 composer-test: .init
 ifdef COMPOSER_EXT
