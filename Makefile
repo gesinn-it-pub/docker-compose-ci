@@ -111,6 +111,12 @@ bash: .bash
 	$(show-current-target)
 	$(compose-ci) down
 
+	# Cleanup: remove images belonging to this compose project
+	@echo "Removing test images for project $(extension)-$(DB_TYPE) ..."
+	@docker images --filter "label=com.docker.compose.project=$(extension)-$(DB_TYPE)" -q | \
+		xargs -r docker rmi -f
+
+
 .PHONY: .destroy
 .destroy:
 	$(show-current-target)
