@@ -7,6 +7,7 @@ IMAGE_NAME := $(extension):test-$(MW_VERSION)-$(SMW_VERSION) # ggf hier Timestam
 # ======== CI ENV Variables ========
 DB_TYPE ?= sqlite
 DB_IMAGE ?= ""
+DB_OPTION ?= ""
 MW_INSTALL_PATH ?= /var/www/html
 
 environment = \
