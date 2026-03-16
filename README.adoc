@@ -115,6 +115,7 @@ Extensions usually required by other extensions are already included and can be 
 | PHP_VERSION | https://hub.docker.com/r/gesinn/mediawiki-ci/tags[Docker image PHP Version]
 | DB_TYPE | Database type (mysql, postgres, sqlite)
 | DB_IMAGE | Database Docker image (mysql and postgres only), for example `mysql:5`
+| DB_OPTION | Additional command line options passed to the database server (e.g. --innodb-snapshot-isolation=0 for MariaDB ≥11.6)
 | EXTENSION | The name of the extension being tested/CI'ed
 | COMPOSER_EXT | `true` or `false`. Enables "composer update" inside of extension.
 | NODE_JS | `true` or `false`. Enables node.js related tests and "npm install"
