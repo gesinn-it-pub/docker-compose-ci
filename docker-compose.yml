@@ -31,7 +31,6 @@ services:
     image: ${DB_IMAGE:-mysql:5}
     environment:
       - MYSQL_ROOT_PASSWORD=database
-    command: ${DB_OPTION:-}
     profiles:
       - mysql
 
@@ -47,4 +46,3 @@ services:
     image: mintel/docker-wait-for-it
     profiles:
       - no-up
-
