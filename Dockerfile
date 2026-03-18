@@ -18,14 +18,15 @@ RUN sed -i s/80/8080/g /etc/apache2/sites-available/000-default.conf /etc/apache
 
 ### SemanticMediaWiki
 ARG SMW_VERSION
-RUN if [ ! -z "${SMW_VERSION}" ]; then \
-        composer-require.sh mediawiki/semantic-media-wiki ${SMW_VERSION} && \
-        echo 'wfLoadExtension( "SemanticMediaWiki" );\n' \
-             '// require ConfigPreloader until https://github.com/SemanticMediaWiki/SemanticMediaWiki/issues/6450 is fixed\n' \
-             'require_once "$IP/extensions/SemanticMediaWiki/src/ConfigPreloader.php";\n' \
-             'enableSemantics( $wgServer );\n' \
-             >> __setup_extension__; \
-    fi
+RUN if [ -n "${SMW_VERSION}" ]; then \
+    composer-require.sh mediawiki/semantic-media-wiki "${SMW_VERSION}" && \
+    printf '%s\n' \
+        'wfLoadExtension( "SemanticMediaWiki" );' \
+        '// require ConfigPreloader until https://github.com/SemanticMediaWiki/SemanticMediaWiki/issues/6450 is fixed' \
+        'require_once "$IP/extensions/SemanticMediaWiki/src/ConfigPreloader.php";' \
+        'enableSemantics( $wgServer );' \
+        >> __setup_extension__; \
+fi
 ### SemanticMediaWiki
 
 ### PageForms
@@ -111,12 +112,14 @@ RUN if [ ! -z "${SCRIBUNTO_VERSION}" ]; then \
 
 ### chameleon
 ARG CHAMELEON_VERSION
-RUN if [ ! -z "${CHAMELEON_VERSION}" ]; then \
-        composer-require.sh mediawiki/chameleon-skin ${CHAMELEON_VERSION} && \
-        echo "wfLoadExtension( 'Bootstrap' );\n" \
-             "wfLoadSkin( 'chameleon' );\n" \
-             "\$wgDefaultSkin='chameleon';\n" \ >> __setup_extension__; \
-    fi
+RUN if [ -n "${CHAMELEON_VERSION}" ]; then \
+    composer-require.sh mediawiki/chameleon-skin "${CHAMELEON_VERSION}" && \
+    printf '%s\n' \
+        "wfLoadExtension( 'Bootstrap' );" \
+        "wfLoadSkin( 'chameleon' );" \
+        "\$wgDefaultSkin='chameleon';" \
+        >> __setup_extension__; \
+fi
 ### chameleon
 
 RUN composer update 
