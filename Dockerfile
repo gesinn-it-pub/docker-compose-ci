@@ -21,6 +21,8 @@ ARG SMW_VERSION
 RUN if [ ! -z "${SMW_VERSION}" ]; then \
         composer-require.sh mediawiki/semantic-media-wiki ${SMW_VERSION} && \
         echo 'wfLoadExtension( "SemanticMediaWiki" );\n' \
+             '// require ConfigPreloader until https://github.com/SemanticMediaWiki/SemanticMediaWiki/issues/6450 is fixed\n' \
+             'require_once "$IP/extensions/SemanticMediaWiki/src/ConfigPreloader.php";\n' \
              'enableSemantics( $wgServer );\n' \
              >> __setup_extension__; \
     fi
