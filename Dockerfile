@@ -110,6 +110,14 @@ RUN if [ ! -z "${SCRIBUNTO_VERSION}" ]; then \
     fi
 ### Scribunto
 
+### Echo
+ARG ECHO_VERSION
+RUN if [ ! -z "${ECHO_VERSION}" ]; then \
+        get-github-extension.sh Echo ${ECHO_VERSION} && \
+        echo 'wfLoadExtension( "Echo" );\n' >> __setup_extension__; \
+    fi
+### Echo
+
 ### chameleon
 ARG CHAMELEON_VERSION
 RUN if [ -n "${CHAMELEON_VERSION}" ]; then \
