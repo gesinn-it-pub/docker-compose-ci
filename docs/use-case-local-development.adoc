@@ -1,0 +1,514 @@
+= Use Case: Local Development
+:toc:
+:toc-placement: preamble
+
+This guide shows how to set up a fast, iterative development workflow with
+docker-compose-ci (DCI). The key insight is that `make install` — which rebuilds the
+Docker image and reinstalls MediaWiki — only needs to run **once per session**. After
+that, source file changes are picked up immediately by the running container via a
+volume mount, and tests can be re-run in seconds.
+
+Without the volume mount, every filtered test run requires a full image rebuild
+(~5 minutes). That is by design for CI correctness; for local development it is
+wasteful. The three setup steps below eliminate the rebuild entirely.
+
+== Step 1: set up your Makefile
+
+Create a `Makefile` in the root of your extension repository that sets DCI variables
+and includes the DCI Makefile. The `-include .env export` line allows local filter
+variables to be loaded from a `.env` file (see <<_using_env_to_persist_filters>>).
+
+[source,makefile]
+----
+-include .env
+export
+
+ifeq (,$(wildcard ./build/))
+    $(shell git submodule update --init --remote)
+endif
+
+EXTENSION      = YourExtension
+MW_VERSION    ?= 1.43
+PHP_VERSION   ?= 8.3
+DB_TYPE       ?= mysql
+DB_IMAGE      ?= "mysql:8"
+COMPOSER_EXT  ?= true
+NODE_JS       ?= true
+
+include build/Makefile
+----
+
+Add the `php-test`, `js-test`, and `dev-test` targets described in
+<<_adding_the_targets_to_your_extension_makefile>> after the `include` line.
+
+`NODE_JS=true` enables two things during the image build: `npm install` is run
+inside the extension directory, and the `npm-test` / `js-test` make targets become
+active. Set it to `true` whenever your extension ships JavaScript that is tested with
+QUnit or linted with ESLint. Leave it unset (or `false`) for pure-PHP extensions to
+keep the build faster.
+
+== Step 2: configure additional extensions
+
+DCI bundles a set of commonly required MediaWiki extensions. Enable them by setting
+the corresponding version variable in your `Makefile`:
+
+[source,makefile]
+----
+SMW_VERSION   ?= 6.0.1
+DT_VERSION    ?= 4.0.3
+SRF_VERSION   ?= 4.0.0
+----
+
+See the link:../README.adoc[README] for the full list of supported extensions and their
+variables.
+
+=== Adding custom LocalSettings entries with __setup_extension__
+
+If your extension requires additional PHP in `LocalSettings.php` beyond a plain
+`wfLoadExtension()` call — for example, setting configuration variables or loading a
+second extension that is not bundled — place a file named `__setup_extension__` in
+the root of your extension repository.
+
+The mechanism works in two phases:
+
+1. **Image build time** (`make install` → image rebuild): The Dockerfile uses
+   `COPY *__setup_extension__ setup_extension` to glob-copy your file into the image.
+   DCI's bundled extensions (SMW, DisplayTitle, etc.) have already written their own
+   `wfLoadExtension()` calls into a `__setup_extension__` file inside the image during
+   the build; your file's content is appended to that.
+2. **MW install time** (`make install` → `maintenance/install.php`): The combined
+   `__setup_extension__` file is appended to `LocalSettings.php` via
+   `cat __setup_extension__ >> LocalSettings.php`.
+
+[source,php]
+----
+# __setup_extension__  (committed to your extension repo)
+$wgMyExtensionSetting = true;
+wfLoadExtension( 'AnotherExtension' );
+----
+
+Because the file is baked into the image at build time, any change to it requires a
+full `make install` (which rebuilds the image).
+
+NOTE: `wfLoadExtension( 'YourExtension' )` is always added automatically by DCI at
+build time — do not add it to `__setup_extension__` yourself.
+
+== Step 3: enable the volume mount
+
+Create `build/docker-compose.override.yml` in your extension repository with a bind
+mount for the extension directory. This file is loaded automatically by DCI's Makefile
+whenever it exists.
+
+[source,yaml]
+----
+# build/docker-compose.override.yml
+services:
+  wiki:
+    volumes:
+      # Bind-mount the extension source directory from the host into the container.
+      # Changes to PHP, JS and test files on the host are immediately visible —
+      # no image rebuild needed.
+      - ./../:/var/www/html/extensions/YourExtension
+
+      # Protect packages installed during the image build from being overwritten
+      # by the bind mount above. These are anonymous Docker volumes that are
+      # initialised from the image on first start and persist across container
+      # restarts until 'make install' destroys them.
+      - /var/www/html/extensions/YourExtension/vendor
+      - /var/www/html/extensions/YourExtension/node_modules  # only if NODE_JS=true
+----
+
+IMPORTANT: Add this file to your `.gitignore`. It is developer-local configuration
+and must not be committed. It survives `git submodule update` because `git` only
+tracks files that belong to the submodule — `docker-compose.override.yml` is not one
+of them.
+
+[source]
+----
+# .gitignore
+build/docker-compose.override.yml
+----
+
+=== Why anonymous volumes for vendor and node_modules?
+
+The Docker image runs `composer update` and `npm install` during the build phase,
+placing the installed packages inside the image. A plain bind mount overwrites the
+entire extension directory with the (empty) host directory, destroying those packages.
+
+An anonymous Docker volume — declared with only a container path, no host path —
+is initialised from the image content on first start and then shadowed over the bind
+mount for that sub-path. The result:
+
+* `src/`, `includes/`, `tests/`, `libs/` etc. → served live from the host
+* `vendor/`, `node_modules/` → served from the image-built packages
+
+When `make install` runs it calls `docker compose down -v`, which destroys all
+volumes (including anonymous ones) and then rebuilds them from a fresh image.
+
+== Session workflow (after setup)
+
+=== First run (or after dependency changes)
+
+Run `make install` once to build the image and start the containers. The anonymous
+volumes are populated from the freshly built image.
+
+[source,bash]
+----
+make install 2>&1 | tee /tmp/install.log; echo "EXIT:$?"
+----
+
+`make install` runs in this sequence: `destroy` (removes containers, volumes, and the
+built image) → `build` (rebuilds the image from scratch, no cache) → `up` (starts
+containers) → `install` (runs `maintenance/install.php` + `maintenance/update.php`).
+
+When you need to re-run `make install`:
+
+* `composer.json` or `package.json` changed (new dependencies)
+* A bundled extension version variable changed
+* `__setup_extension__` changed (baked into image at build time)
+* MW/PHP version variables changed
+* You want a guaranteed clean state before a release
+
+NOTE: `make down` stops containers and also removes the built Docker image. After
+`make down`, the next `make up` triggers a full image rebuild. Use `make down` only
+when you want to free disk space or fully reset. For a normal session end, simply
+leave the containers running — they consume no CPU when idle.
+
+=== Iterating on PHP code
+
+Run `php-test` — it executes lint, and phpunit with an optional class/method filter.
+phpcs is intentionally excluded: style errors do not affect test behaviour and run
+in ~14 seconds; reserve it for the pre-commit check.
+
+[source,bash]
+----
+# Full PHP suite (no filter):
+make php-test
+
+# Focused on one test class:
+make php-test FILTER=PFFormCacheTest
+
+# Focused on one test method:
+make php-test FILTER=PFFormCacheTest::testGetPreloadedText
+----
+
+Typical turnaround: **~2 seconds** for a filtered run.
+
+=== Iterating on JS code
+
+Run `js-test` — it executes eslint, banana-checker, and qunit with an optional file
+filter. When `FILE` is given, eslint is restricted to that file and the matching qunit
+test file is derived automatically by convention:
+`libs/PF_foo.js` → `tests/node-qunit/PF_foo.test.js`.
+
+[source,bash]
+----
+# Full JS suite (no filter):
+make js-test
+
+# Focused on one source file (eslint + matching test file):
+make js-test FILE=libs/PF_formInput.js
+----
+
+Typical turnaround: **~6 seconds** for a filtered run.
+
+=== Using .env to persist filters
+
+Because the extension Makefile includes `-include .env export`, you can write your
+current working filters into a local `.env` file and omit them from the command line:
+
+[source]
+----
+# .env  (add to .gitignore — developer-local)
+FILTER=PFFormCacheTest
+----
+
+[source,bash]
+----
+# reads FILTER from .env automatically
+make php-test
+----
+
+== Pre-commit gate
+
+Before every commit, run the full suite without reinstalling. `dev-test` is equivalent
+to `make ci` but skips the `make install` step — it relies on the running containers
+and the volume mount to reflect the current source state.
+
+[source,bash]
+----
+make dev-test 2>&1 | tee /tmp/dev-test.log; echo "EXIT:$?"
+grep -E "Tests:.*Assertions:|pass|fail" /tmp/dev-test.log
+----
+
+`dev-test` runs in sequence:
+
+1. `composer lint` — parallel-lint over all PHP files
+2. `composer phpcs` — code style check (full)
+3. `composer phpunit` — full PHPUnit suite
+4. `npm run analyze` — eslint + banana-checker (full)
+5. `npx qunit` — full QUnit suite
+
+Typical duration: **2–3 minutes** (dominated by phpunit and phpcs).
+
+NOTE: `dev-test` does _not_ run phan. Phan takes ~1 minute and is only meaningful
+immediately before a release. Run it once with `make composer-phan` when you are
+done with a feature branch.
+
+== Adding the targets to your extension Makefile
+
+The `php-test`, `js-test`, and `dev-test` targets are extension-specific because they
+use extension-level filter conventions unavailable inside DCI. Add them to your own
+`Makefile` after `include build/Makefile`:
+
+[source,makefile]
+----
+# PHP development cycle: lint (full) + phpunit
+# Optional:
+#   FILTER=MyTestClass   restricts phpunit via --filter
+.PHONY: php-test
+php-test: .init
+ifdef COMPOSER_EXT
+	$(show-current-target)
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer lint"
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer phpunit$(if $(FILTER), -- --filter $(FILTER),)"
+endif
+
+# JS development cycle: eslint + banana-checker + qunit
+# Optional:
+#   FILE=libs/PF_foo.js   restricts eslint to one file and derives the matching
+#                         qunit test file (libs/PF_foo.js → tests/node-qunit/PF_foo.test.js)
+.PHONY: js-test
+js-test: .init
+ifdef NODE_JS
+	$(show-current-target)
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && $(if $(FILE),npx eslint $(FILE),npm run eslint) && npm run banana-checker"
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && npx qunit --require ./tests/node-qunit/setup.js $(if $(FILE),$(patsubst libs/%.js,tests/node-qunit/%.test.js,$(FILE)),'tests/node-qunit/**/*.test.js')"
+endif
+
+# Full development cycle without reinstalling.
+# Equivalent to 'make ci' but skips 'make install'. Run before every commit.
+.PHONY: dev-test
+dev-test: .init
+ifdef COMPOSER_EXT
+	$(show-current-target)
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer lint"
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer phpcs"
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer phpunit"
+endif
+ifdef NODE_JS
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && npm run analyze"
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && npx qunit --require ./tests/node-qunit/setup.js 'tests/node-qunit/**/*.test.js'"
+endif
+----
+
+== Xdebug / remote debugging
+
+DCI ships a `prepare-dev` target that configures Xdebug inside the running container
+and writes a `.vscode/launch.json` for step-debugging from VS Code:
+
+[source,bash]
+----
+make prepare-dev
+----
+
+Run this once after `make install`. The target patches `/tools/prepare-dev.sh` inside
+the container with the correct extension path and then executes it.
+
+== Access the wiki from the browser
+
+Combine the volume mount override with a port mapping to browse the running wiki:
+
+[source,yaml]
+----
+# build/docker-compose.override.yml
+services:
+  wiki:
+    ports:
+      - 8080:8080
+    volumes:
+      - ./../:/var/www/html/extensions/YourExtension
+      - /var/www/html/extensions/YourExtension/vendor
+      - /var/www/html/extensions/YourExtension/node_modules
+----
+
+After `make install`, the wiki is available at http://localhost:8080 with credentials
+`WikiSysop` / `wiki4everyone`.
+
+=== Note on docker-compose-dev.yml
+
+DCI also ships a `docker-compose-dev.yml` that provides a built-in volume mount
+activated via `make dev-bash`. It uses `docker compose run` instead of `exec`,
+which starts a fresh interactive container rather than attaching to the already-running
+one. The `docker-compose.override.yml` approach described in Step 3 is preferred for
+iterative development because it works with the existing running container and its
+already-initialised anonymous volumes.
+
+== Summary: complete session example
+
+[source,bash]
+----
+# --- Session start (once) ---
+make install 2>&1 | tee /tmp/install.log; echo "EXIT:$?"
+
+# --- PHP iteration loop ---
+# edit includes/PF_FormCache.php ...
+make php-test FILTER=PFFormCacheTest   # ~2 s
+# edit again ...
+make php-test FILTER=PFFormCacheTest   # ~2 s
+
+# --- JS iteration loop ---
+# edit libs/PF_formInput.js ...
+make js-test FILE=libs/PF_formInput.js  # ~6 s
+
+# --- Pre-commit gate ---
+make dev-test 2>&1 | tee /tmp/dev-test.log; echo "EXIT:$?"
+
+# --- Optional: phan (before release / after major refactoring) ---
+make composer-phan 2>&1 | tee /tmp/phan.log; echo "EXIT:$?"
+----
+
+== Complete example: Makefile (PageForms)
+
+This is the full `Makefile` from https://github.com/gesinn-it/mediawiki-extensions-PageForms[PageForms],
+a MediaWiki extension with both PHP and JavaScript components requiring SMW and
+DisplayTitle. It serves as a concrete reference implementation for the patterns
+described in this guide.
+
+[source,makefile]
+----
+-include .env
+export
+
+# setup for docker-compose-ci build directory
+# delete "build" directory to update docker-compose-ci
+
+ifeq (,$(wildcard ./build/))
+    $(shell git submodule update --init --remote)
+endif
+
+EXTENSION=PageForms
+
+# docker images
+MW_VERSION?=1.43
+PHP_VERSION?=8.3
+DB_TYPE?=mysql
+DB_IMAGE?="mysql:8"
+
+# extensions
+SMW_VERSION?=6.0.1
+DT_VERSION?=4.0.3
+
+# composer
+# Enables "composer update" inside of extension
+COMPOSER_EXT?=true
+
+# nodejs
+# Enables node.js related tests and "npm install"
+NODE_JS?=true
+
+# check for build dir and git submodule init if it does not exist
+include build/Makefile
+
+.PHONY: composer-phan
+composer-phan: .init
+ifdef COMPOSER_EXT
+	$(show-current-target)
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer phan $(COMPOSER_PARAMS)"
+endif
+
+.PHONY: composer-phpcs
+composer-phpcs: .init
+ifdef COMPOSER_EXT
+	$(show-current-target)
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer phpcs $(COMPOSER_PARAMS)"
+endif
+
+.PHONY: npm-eslint
+npm-eslint: .init
+ifdef NODE_JS
+	$(show-current-target)
+ifdef ESLINT_PARAMS
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && npx eslint $(ESLINT_PARAMS)"
+else
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && npm run eslint"
+endif
+endif
+
+.PHONY: npm-qunit
+npm-qunit: .init
+ifdef NODE_JS
+	$(show-current-target)
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && npx qunit --require ./tests/node-qunit/setup.js $(QUNIT_PARAMS)"
+endif
+
+# PHP development cycle: lint (full) + phpunit
+# Optional:
+#   FILTER=PFFormCacheTest   restricts phpunit via --filter
+.PHONY: php-test
+php-test: .init
+ifdef COMPOSER_EXT
+	$(show-current-target)
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer lint"
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer phpunit$(if $(FILTER), -- --filter $(FILTER),)"
+endif
+
+# JS development cycle: eslint + banana-checker + qunit
+# Optional:
+#   FILE=libs/PF_formInput.js   restricts eslint to one file;
+#                               also derives the matching qunit test file
+#                               (libs/PF_foo.js -> tests/node-qunit/PF_foo.test.js)
+.PHONY: js-test
+js-test: .init
+ifdef NODE_JS
+	$(show-current-target)
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && $(if $(FILE),npx eslint $(FILE),npm run eslint) && npm run banana-checker"
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && npx qunit --require ./tests/node-qunit/setup.js $(if $(FILE),$(patsubst libs/%.js,tests/node-qunit/%.test.js,$(FILE)),'tests/node-qunit/**/*.test.js')"
+endif
+
+# Full development cycle without reinstalling: lint + phpcs + phpunit + eslint + qunit
+# Equivalent to 'make ci' but skips 'make install'. Run before committing.
+.PHONY: dev-test
+dev-test: .init
+ifdef COMPOSER_EXT
+	$(show-current-target)
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer lint"
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer phpcs"
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && composer phpunit"
+endif
+ifdef NODE_JS
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && npm run analyze"
+	$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && npx qunit --require ./tests/node-qunit/setup.js 'tests/node-qunit/**/*.test.js'"
+endif
+----
+
+== Complete example: docker-compose.override.yml (PageForms)
+
+The matching `build/docker-compose.override.yml` for the Makefile above. Because
+`NODE_JS=true`, both `vendor` and `node_modules` need anonymous volume protection.
+PageForms requires no `__setup_extension__` file: the SMW and DisplayTitle
+`wfLoadExtension()` calls are handled by the DCI Dockerfile via `SMW_VERSION` and
+`DT_VERSION`.
+
+[source,yaml]
+----
+# build/docker-compose.override.yml
+# Developer-local. Do NOT commit. Add to .gitignore:
+#   build/docker-compose.override.yml
+services:
+  wiki:
+    ports:
+      - 8080:8080   # optional: expose wiki at http://localhost:8080
+    volumes:
+      # Bind-mount the extension source directory from the host into the container.
+      # PHP, JS, and test file changes on the host are immediately visible —
+      # no image rebuild needed.
+      - ./../:/var/www/html/extensions/PageForms
+
+      # Protect packages installed during the image build.
+      # COMPOSER_EXT=true  →  composer update runs in the image
+      # NODE_JS=true        →  npm install runs in the image
+      - /var/www/html/extensions/PageForms/vendor
+      - /var/www/html/extensions/PageForms/node_modules
+----
+

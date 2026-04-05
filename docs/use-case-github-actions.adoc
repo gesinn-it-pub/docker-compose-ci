@@ -1,0 +1,149 @@
+= Use Case: GitHub Actions CI
+:toc:
+:toc-placement: preamble
+
+This guide covers using docker-compose-ci as the test backend for GitHub Actions
+workflows. The canonical use case is a MediaWiki extension repository that runs its
+full test suite on every push and pull request, pinning specific MW/PHP/SMW versions
+per matrix row.
+
+IMPORTANT: This guide assumes a minimal `Makefile` exists in the extension repository
+that sets the DCI configuration variables and includes `build/Makefile`. This is
+described in link:use-case-local-development.adoc#_step_1_set_up_your_makefile[Step 1
+of the Local Development guide]. The custom `php-test`, `js-test`, and `dev-test`
+targets from that guide are *not* required for GitHub Actions CI — `make ci` is a
+DCI built-in target.
+
+== How it works
+
+`make ci` is the single entry point for every CI run. It:
+
+1. Destroys any existing containers and volumes (`make install` → `destroy` → `down -v`).
+2. Builds the Docker image without cache — base MW image + all configured dependency
+   extensions baked in.
+3. Starts the containers and runs `maintenance/install.php` + `maintenance/update.php`.
+4. Runs `composer test` (lint + phpcs + phpunit) and `npm run test` (eslint + qunit).
+
+Every run is fully isolated. No state is shared between runs.
+
+`make ci-coverage` works identically but uses the `docker-compose-ci.yml` overlay,
+which adds a `./coverage` bind mount so that coverage output is written to
+`build/coverage/` on the host. The coverage run uses `composer test-coverage` which
+invokes Xdebug; the plain `make ci` run does not.
+
+== GitHub Actions workflow
+
+A typical `ci.yml` runs a matrix of MW/PHP version combinations. The `coverage: true`
+flag marks the single row that also generates Clover XML for Codecov.
+
+[source,yaml]
+----
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: "MW ${{ matrix.mw }} / PHP ${{ matrix.php }}"
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include:
+          - mw: "1.39"
+            php: "8.1"
+            smw: "4.2.0"
+          - mw: "1.43"
+            php: "8.3"
+            smw: "6.0.1"
+            coverage: true   # <1>
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive   # <2>
+
+      - name: Run CI
+        run: >
+          make ci
+          MW_VERSION=${{ matrix.mw }}
+          PHP_VERSION=${{ matrix.php }}
+          SMW_VERSION=${{ matrix.smw }}
+        env:
+          COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}   # <3>
+
+      - name: Run coverage   # <4>
+        if: ${{ matrix.coverage }}
+        run: >
+          make ci-coverage
+          MW_VERSION=${{ matrix.mw }}
+          PHP_VERSION=${{ matrix.php }}
+          SMW_VERSION=${{ matrix.smw }}
+
+      - name: Upload coverage
+        if: ${{ matrix.coverage }}
+        uses: codecov/codecov-action@v4
+        with:
+          files: build/coverage/php/coverage.xml
+----
+<1> Exactly one matrix row carries `coverage: true`. Use this row's versions for all
+    local coverage and phan runs.
+<2> `submodules: recursive` clones the `build/` submodule automatically.
+<3> Private Composer packages require a token; pass it as a secret.
+<4> Coverage re-runs the full suite with Xdebug enabled. Run it as a separate step
+    so a coverage failure does not fail the plain CI step.
+
+== Selecting a database
+
+The default database is `sqlite`, which requires no extra service. For mysql or postgres,
+set `DB_TYPE` and `DB_IMAGE`:
+
+[source,yaml]
+----
+- name: Run CI
+  run: >
+    make ci
+    MW_VERSION=${{ matrix.mw }}
+    PHP_VERSION=${{ matrix.php }}
+    DB_TYPE=mysql
+    DB_IMAGE=mysql:8
+----
+
+The `docker-compose.yml` includes pre-configured `mysql` and `postgres` service profiles
+that are activated automatically when `DB_TYPE` is set.
+
+== Running phan in CI
+
+Phan requires the full MW type graph and runs only on the coverage matrix row to avoid
+baseline mismatches across different MW versions. Add it as an explicit step after the
+coverage job:
+
+[source,yaml]
+----
+      - name: Run phan
+        if: ${{ matrix.coverage }}
+        run: >
+          make composer-phan
+          MW_VERSION=${{ matrix.mw }}
+          PHP_VERSION=${{ matrix.php }}
+          SMW_VERSION=${{ matrix.smw }}
+----
+
+NOTE: Do not add `phan` to the `composer test` script. It must run as a dedicated step
+so that failures are visible before the `|| true` swallow in `composer test-coverage`.
+
+== Updating the DCI submodule in CI
+
+When your `ci.yml` runs on a fresh checkout, the `build/` submodule is pinned to the
+commit recorded in your repository. To update to the latest DCI version, run locally:
+
+[source,bash]
+----
+git submodule update --init --remote
+git add build
+git commit -m "chore(build): update docker-compose-ci submodule"
+----
+
+Then push and let CI pick up the new version.

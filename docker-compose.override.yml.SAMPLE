@@ -2,5 +2,7 @@ services:
   wiki:
     volumes:
       - ./../:/var/www/html/extensions/SemanticResultFormats
-      # exclude folder vendor from mountig to docker container
+      # Protect packages installed during the image build from being overwritten by the bind mount.
+      # Remove node_modules line if NODE_JS is not set.
       - /var/www/html/extensions/SemanticResultFormats/vendor
+      - /var/www/html/extensions/SemanticResultFormats/node_modules
