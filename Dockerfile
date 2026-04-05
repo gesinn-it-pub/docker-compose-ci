@@ -105,9 +105,12 @@ RUN if [ ! -z "${LINGO_VERSION}" ]; then \
 ### Scribunto
 ARG SCRIBUNTO_VERSION
 RUN if [ ! -z "${SCRIBUNTO_VERSION}" ]; then \
-        get-github-extension.sh Scribunto ${SCRIBUNTO_VERSION} && \
-        echo 'wfLoadExtension( "Scribunto" );\n' >> __setup_extension__; \
-    fi
+    get-github-extension.sh Scribunto ${SCRIBUNTO_VERSION} && \
+    printf '%s\n' \
+        "wfLoadExtension( 'Scribunto' );" \
+        "\$wgScribuntoDefaultEngine='luastandalone';" \
+        >> __setup_extension__; \
+fi
 ### Scribunto
 
 ### Echo
