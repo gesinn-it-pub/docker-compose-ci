@@ -13,3 +13,6 @@
 
 # Ignore the coverage output from local runs
 /coverage
+
+# Local DCI volume-mount override — developer-local, not committed
+docker-compose.override.yml
