@@ -93,6 +93,66 @@ full `make install` (which rebuilds the image).
 NOTE: `wfLoadExtension( 'YourExtension' )` is always added automatically by DCI at
 build time — do not add it to `__setup_extension__` yourself.
 
+=== Installing non-bundled extensions with extensions.local.json
+
+If you need an extension that is not bundled in DCI — for example a third-party
+extension required only during local development or for a specific test scenario —
+place a file named `extensions.local.json` in the root of your extension repository
+(next to your `Makefile`).
+
+DCI picks it up automatically at image build time via
+`COPY extensions.local.json* /tmp/` and passes it to `install-extensions.sh`, which
+downloads the extension and registers it in `__setup_extension__`.
+
+[source,json]
+----
+{
+  "extensions": [
+    {
+      "name": "HeaderTabs",
+      "version": "2.4"
+    }
+  ]
+}
+----
+
+Each entry supports the following fields:
+
+[cols="1,1,3",options="header"]
+|===
+| Field | Required | Description
+
+| `name`
+| yes
+| Extension name; used as the directory name under `extensions/` and in `wfLoadExtension()`.
+
+| `version`
+| yes
+| Git tag, branch, or (for Composer entries) a version constraint.
+
+| `repo`
+| no
+| GitHub path `org/repo`. Default: `wikimedia/mediawiki-extensions-<name>`.
+
+| `private`
+| no
+| Set to `true` to use `get-private-github-extension.sh` (requires `GH_API_TOKEN` secret).
+
+| `composer`
+| no
+| Composer package name (e.g. `vendor/my-ext`). When set, uses `composer-require.sh` instead of `get-github-extension.sh`.
+
+| `local_settings`
+| no
+| PHP snippet appended to `LocalSettings.php`. Default: `wfLoadExtension( "<name>" );`.
+|===
+
+Because the file is processed at image build time, any change requires a full
+`make install`.
+
+TIP: Add `extensions.local.json` to your `.gitignore` when it is only needed locally.
+Commit it when the extension is a required dependency for CI.
+
 == Step 3: enable the volume mount
 
 Create `build/docker-compose.override.yml` in your extension repository with a bind

@@ -166,3 +166,8 @@ COPY *__setup_extension__ setup_extension
 RUN if [ -f setup_extension ]; then \
         cat setup_extension >> __setup_extension__; \
     fi
+
+### custom extensions (extensions.local.json in the project root, optional)
+COPY extensions.local.json* /tmp/
+RUN install-extensions.sh /tmp/extensions.local.json
+### custom extensions
