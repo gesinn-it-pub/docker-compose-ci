@@ -169,5 +169,5 @@ RUN if [ -f setup_extension ]; then \
 
 ### custom extensions (extensions.local.json in the project root, optional)
 COPY extensions.local.json* /tmp/
-RUN install-extensions.sh /tmp/extensions.local.json
+RUN if command -v install-extensions.sh > /dev/null 2>&1; then install-extensions.sh /tmp/extensions.local.json; fi
 ### custom extensions
