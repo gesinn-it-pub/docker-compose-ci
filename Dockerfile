@@ -20,12 +20,19 @@ RUN sed -i s/80/8080/g /etc/apache2/sites-available/000-default.conf /etc/apache
 ARG SMW_VERSION
 RUN if [ -n "${SMW_VERSION}" ]; then \
     composer-require.sh mediawiki/semantic-media-wiki "${SMW_VERSION}" && \
-    printf '%s\n' \
-        'wfLoadExtension( "SemanticMediaWiki" );' \
-        '// require ConfigPreloader until https://github.com/SemanticMediaWiki/SemanticMediaWiki/issues/6450 is fixed' \
-        'require_once "$IP/extensions/SemanticMediaWiki/src/ConfigPreloader.php";' \
-        'enableSemantics( $wgServer );' \
-        >> __setup_extension__; \
+    SMW_MAJOR=$(echo "${SMW_VERSION}" | cut -d. -f1) && \
+    if [ "${SMW_VERSION}" = "dev-master" ] || [ "${SMW_MAJOR}" -ge 7 ] 2>/dev/null; then \
+        printf '%s\n' \
+            'wfLoadExtension( "SemanticMediaWiki" );' \
+            >> __setup_extension__; \
+    else \
+        printf '%s\n' \
+            'wfLoadExtension( "SemanticMediaWiki" );' \
+            '// require ConfigPreloader until https://github.com/SemanticMediaWiki/SemanticMediaWiki/issues/6450 is fixed' \
+            'require_once "$IP/extensions/SemanticMediaWiki/src/ConfigPreloader.php";' \
+            'enableSemantics( $wgServer );' \
+            >> __setup_extension__; \
+    fi; \
 fi
 ### SemanticMediaWiki
 
