@@ -134,6 +134,61 @@ coverage job:
 NOTE: Do not add `phan` to the `composer test` script. It must run as a dedicated step
 so that failures are visible before the `|| true` swallow in `composer test-coverage`.
 
+== Custom extensions in CI
+
+If your extension depends on a third-party extension that DCI does not bundle,
+GitHub Actions needs the same `extensions.local.json` mechanism used for local
+development — see
+link:use-case-local-development.adoc#_installing_non_bundled_extensions_with_extensions_local_json[Installing
+non-bundled extensions] in the Local Development guide.
+
+There is nothing CI-specific to configure: `make ci` builds the Docker image the
+same way `make install` does, and the Dockerfile's
+`COPY extensions.local.json* /tmp/` step picks up the file from the repository
+checkout regardless of whether the build runs locally or on a GitHub Actions
+runner. The only requirement is that the file is actually present in the checkout
+— i.e. *committed*, not just kept locally.
+
+[source,json]
+----
+// extensions.local.json (committed to the extension repo root)
+{
+  "extensions": [
+    {
+      "name": "HeaderTabs",
+      "version": "2.4"
+    }
+  ]
+}
+----
+
+TIP: If you followed the local development guide and added `extensions.local.json`
+to `.gitignore` for local-only experimentation, remove that ignore rule and commit
+the file once the dependency becomes required for CI too.
+
+=== Private extensions
+
+If an entry sets `"private": true`, `install-extensions.sh` fetches it via
+`get-private-github-extension.sh`, which requires a `GH_API_TOKEN`. Store the
+token as a repository secret and pass it through in the CI step:
+
+[source,yaml]
+----
+- name: Run CI
+  run: >
+    make ci
+    MW_VERSION=${{ matrix.mw }}
+    PHP_VERSION=${{ matrix.php }}
+  env:
+    GH_API_TOKEN: ${{ secrets.GH_API_TOKEN }}
+----
+
+=== Composer-based extensions
+
+If an entry sets `composer`, `install-extensions.sh` uses `composer-require.sh`
+instead. Private Composer packages need `COMPOSER_AUTH` set the same way as in
+the base workflow example above.
+
 == Updating the DCI submodule in CI
 
 When your `ci.yml` runs on a fresh checkout, the `build/` submodule is pinned to the
