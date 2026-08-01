@@ -134,6 +134,61 @@ coverage job:
 NOTE: Do not add `phan` to the `composer test` script. It must run as a dedicated step
 so that failures are visible before the `|| true` swallow in `composer test-coverage`.
 
+== Browser smoke tests in CI
+
+See link:use-case-local-development.adoc#_browser_smoke_tests_with_playwright[Browser
+smoke tests with Playwright] in the Local Development guide for why this exists and
+how to write the smoke-test script itself.
+
+`BROWSER_TESTS=true` adds a Playwright + Chromium install (~15 OS packages: X11,
+fonts, codecs) to the image build, costing an extra ~1-2 minutes per row that enables
+it. Restrict it to a single matrix row — typically the same row that carries
+`coverage: true` — rather than enabling it everywhere:
+
+[source,yaml]
+----
+jobs:
+  test:
+    strategy:
+      matrix:
+        include:
+          - mw: "1.39"
+            php: "8.1"
+            smw: "4.2.0"
+          - mw: "1.43"
+            php: "8.3"
+            smw: "6.0.1"
+            coverage: true
+            browser: true   # <1>
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Run CI
+        run: >
+          make ci
+          MW_VERSION=${{ matrix.mw }}
+          PHP_VERSION=${{ matrix.php }}
+          SMW_VERSION=${{ matrix.smw }}
+          BROWSER_TESTS=${{ matrix.browser }}
+
+      - name: Run browser smoke test   # <2>
+        if: ${{ matrix.browser }}
+        run: >
+          make browser-test
+          MW_VERSION=${{ matrix.mw }}
+          PHP_VERSION=${{ matrix.php }}
+          SMW_VERSION=${{ matrix.smw }}
+          BROWSER_TESTS=${{ matrix.browser }}
+----
+<1> Only one matrix row sets `browser: true`, keeping the Chromium download tax off
+    every other row.
+<2> `browser-test` is an extension-specific Makefile target (not a DCI built-in) that
+    runs the smoke-test script inside the running container, e.g.
+    `$(compose-exec-wiki) bash -c "cd $(EXTENSION_FOLDER) && node tests/browser/smoke.js"`.
+
 == Custom extensions in CI
 
 If your extension depends on a third-party extension that DCI does not bundle,

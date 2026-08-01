@@ -6,6 +6,7 @@ services:
       args:
         AL_VERSION: ${AL_VERSION}
         AR_VERSION: ${AR_VERSION}
+        BROWSER_TESTS: ${BROWSER_TESTS}
         CHAMELEON_VERSION: ${CHAMELEON_VERSION}
         COMPOSER_EXT: ${COMPOSER_EXT}
         DT_VERSION: ${DT_VERSION}
