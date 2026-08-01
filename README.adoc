@@ -91,6 +91,11 @@ git submodule update --init --remote
 | `NODE_JS`
 | Set to `true` to run `npm install` and enable JS test targets.
 
+| `BROWSER_TESTS`
+| Set to `true` to install Playwright and Chromium for browser smoke tests. See the
+  link:docs/use-case-local-development.adoc#_browser_smoke_tests_with_playwright[Local
+  Development guide].
+
 | `PHP_EXTENSIONS`
 | Space-separated list of PHP extensions to install via `docker-php-ext-install`.
 

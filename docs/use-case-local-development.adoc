@@ -272,6 +272,61 @@ make js-test FILE=libs/PF_formInput.js
 
 Typical turnaround: **~6 seconds** for a filtered run.
 
+=== Browser smoke tests with Playwright
+
+jsdom-based QUnit tests never load MediaWiki's real ResourceLoader, so a broken
+`ResourceModules` dependency list (a module referencing a script that no longer exists,
+for example) can pass every automated test while silently failing to load in an actual
+browser. Set `BROWSER_TESTS=true` in your Makefile to install Playwright and Chromium
+in the image, then write a smoke test that drives the already-running wiki container
+at `http://127.0.0.1:8080` (no auth needed from inside the container — see
+<<_access_the_wiki_from_the_browser>>).
+
+[source,makefile]
+----
+BROWSER_TESTS ?= true
+----
+
+`BROWSER_TESTS=true` runs `npm install --no-save playwright` and
+`npx playwright install --with-deps chromium` inside the extension directory during
+the image build — the same opt-in pattern as `NODE_JS`. Leave it unset for extensions
+that don't need browser coverage; the extra layer costs roughly 1-2 minutes to build.
+
+Each extension writes its own smoke-test script against the plain `playwright` npm
+package; DCI only makes the browser available. A minimal example:
+
+[source,javascript]
+----
+// tests/browser/smoke.js
+const { chromium } = require( 'playwright' );
+
+( async () => {
+	const browser = await chromium.launch();
+	const page = await browser.newPage();
+	const errors = [];
+	page.on( 'pageerror', ( err ) => errors.push( err.message ) );
+	page.on( 'console', ( msg ) => {
+		if ( msg.type() === 'error' ) {
+			errors.push( msg.text() );
+		}
+	} );
+
+	await page.goto( 'http://127.0.0.1:8080/index.php/Main_Page' );
+	await page.waitForLoadState( 'networkidle' );
+	await browser.close();
+
+	if ( errors.length ) {
+		console.error( 'Browser console errors:', errors );
+		process.exit( 1 );
+	}
+} )();
+----
+
+Run it inside the container with `make bash`, then `node tests/browser/smoke.js`, or
+wire it into a Makefile target such as `browser-test` — see
+link:use-case-github-actions.adoc#_browser_smoke_tests_in_ci[Browser smoke tests in
+CI] for a matrix-restricted example.
+
 === Using .env to persist filters
 
 Because the extension Makefile includes `-include .env export`, you can write your

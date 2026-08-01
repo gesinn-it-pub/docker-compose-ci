@@ -157,6 +157,13 @@ RUN if [ ! -z "${COMPOSER_EXT}" ] ; then cd extensions/$EXTENSION && composer up
 ARG NODE_JS
 RUN if [ ! -z "${NODE_JS}" ] ; then cd extensions/$EXTENSION && npm install ; fi
 
+ARG BROWSER_TESTS
+RUN if [ ! -z "${BROWSER_TESTS}" ] ; then \
+        cd extensions/$EXTENSION && \
+        npm install --no-save playwright && \
+        npx playwright install --with-deps chromium ; \
+    fi
+
 # special handling for testing SMW itself
 RUN if [ "${EXTENSION}" = "SemanticMediaWiki" ]; then \
         COMPOSER=composer.local.json composer require --no-update --working-dir ${MW_INSTALL_PATH} mediawiki/semantic-media-wiki @dev && \
