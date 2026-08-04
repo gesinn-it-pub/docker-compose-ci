@@ -244,6 +244,121 @@ If an entry sets `composer`, `install-extensions.sh` uses `composer-require.sh`
 instead. Private Composer packages need `COMPOSER_AUTH` set the same way as in
 the base workflow example above.
 
+== Running phpunit on newer MediaWiki versions
+
+MediaWiki core has been phasing out the `tests/phpunit/phpunit.php` maintenance-script
+entry point in favour of running PHPUnit directly via `vendor/bin/phpunit`. Extensions
+whose `composer.json` still invoke phpunit the old way
+
+[source,json]
+----
+"phpunit": "php ../../tests/phpunit/phpunit.php -c phpunit.xml.dist --testdox"
+----
+
+will fail once tested against a MW version where that wrapper no longer behaves as
+expected. The fix is to invoke `vendor/bin/phpunit` directly, with a small bootstrap
+sequence that keeps the script working across the full range of supported MW versions:
+
+[source,json]
+----
+"scripts": {
+  "phpunit": [
+    "Composer\\Config::disableProcessTimeout",
+    "bash -c 'cd ${MW_INSTALL_PATH:-../..} && { [ -f tests/phpunit/generatePHPUnitConfig.php ] && { php tests/phpunit/generatePHPUnitConfig.php >/dev/null 2>&1 || true; [ -f phpunit.xml ] || printf \"%s\" \"<phpunit><!-- generatePHPUnitConfig --></phpunit>\" > phpunit.xml; } || true; } && MEDIAWIKI_HAS_INTEGRATION_TESTS=1 vendor/bin/phpunit -c extensions/YourExtension/phpunit.xml.dist --bootstrap tests/phpunit/bootstrap.php --testdox'"
+  ],
+  "phpunit-coverage": "@phpunit --coverage-text --coverage-html extensions/YourExtension/coverage/php --coverage-clover extensions/YourExtension/coverage/php/coverage.xml"
+}
+----
+
+What each piece does:
+
+`cd ${MW_INSTALL_PATH:-../..}`::
+`vendor/bin/phpunit` must be invoked from the MW install root, not from the extension
+directory — MW core's own bootstrap files resolve paths relative to it. `MW_INSTALL_PATH`
+is set inside the DCI container (see the Dockerfile); the `../..` fallback covers any
+other environment where the extension sits two levels below the MW root but the
+variable isn't set.
+
+`generatePHPUnitConfig.php` / the `phpunit.xml` fallback::
+Newer MW versions read the extension/skin list from a generated root-level `phpunit.xml`
+rather than discovering it dynamically. `generatePHPUnitConfig.php` produces that file;
+older MW versions don't ship this script at all, so the `[ -f ... ]` guard makes the
+whole step a no-op there. If the generator script exists but exits non-zero for any
+reason, the fallback writes a minimal placeholder `phpunit.xml` so the subsequent
+`vendor/bin/phpunit` call still finds a config file to load.
+
+`MEDIAWIKI_HAS_INTEGRATION_TESTS=1`::
+MW core's `tests/phpunit/bootstrap.php` tries to guess, from the PHPUnit invocation,
+whether integration tests (which need the full MW settings/service container) are
+about to run. The heuristic does not reliably detect that a mixed unit+integration
+suite is being invoked directly via `vendor/bin/phpunit` rather than through the
+maintenance-script entry point. Setting this variable explicitly on the final
+`vendor/bin/phpunit` call is what actually controls the behaviour — skip it only if
+the extension's suite is unit-tests-only.
+
+`--bootstrap tests/phpunit/bootstrap.php`::
+Passed on the command line so it takes precedence over anything the `phpunit.xml.dist`
+file itself declares. If the extension ships its own custom bootstrap file (see below),
+point this flag at that file instead of MW core's.
+
+`-c extensions/YourExtension/phpunit.xml.dist`::
+The extension's own PHPUnit config, referenced by its path relative to the MW install
+root (since the working directory is now the MW root, not the extension directory).
+
+=== Extensions with their own tests/bootstrap.php
+
+Some extensions ship a custom `tests/bootstrap.php` — typically to register a
+teardown hook, provide a fallback for a class only available in newer versions of a
+dependency, or chain into MW core's bootstrap in some other way. Two MW core bootstrap
+files are relevant here and they behave differently:
+
+`tests/phpunit/bootstrap.php`::
+The general-purpose entry point. It defines `MW_PHPUNIT_TEST` and, depending on how
+PHPUnit was invoked, may also define `MW_PHPUNIT_UNIT` — which switches
+`MediaWikiIntegrationTestCase` into a restricted mode without full service-container
+access. A test class that isn't itself a `MediaWikiIntegrationTestCase` / doesn't need
+that access is unaffected; a test that calls into extension code depending on
+`MediaWikiServices::getInstance()` (directly or indirectly) will fail with
+`NoSuchServiceException` if this restricted mode is active and the class isn't set up
+to request full integration test support.
+
+`tests/phpunit/bootstrap.maintenance.php`::
+Used when PHPUnit is invoked through the maintenance-script entry point. It assumes MW
+core has already been bootstrapped and `MW_PHPUNIT_TEST` is already defined; if not,
+it re-includes `tests/phpunit/phpunit.php` itself — which crashes when PHPUnit itself
+(rather than that maintenance script) is the actual process entry point, since that
+file expects to own the entire process lifecycle. An extension's custom bootstrap
+chaining into `bootstrap.maintenance.php` directly (to reuse its teardown hook, for
+example) needs to `define( 'MW_PHPUNIT_TEST', true )` *and* load the full
+`tests/phpunit/bootstrap.php` first, so that MW core and the service container are
+actually initialized before the teardown hook is registered:
+
+[source,php]
+----
+// tests/bootstrap.php
+$mwTestsDir = ( getenv( 'MW_INSTALL_PATH' ) ?: __DIR__ . '/../../..' ) . '/tests/phpunit';
+if ( !defined( 'MEDIAWIKI' ) && is_readable( "$mwTestsDir/bootstrap.php" ) ) {
+	require_once "$mwTestsDir/bootstrap.php";
+}
+if ( is_readable( "$mwTestsDir/bootstrap.maintenance.php" ) ) {
+	require_once "$mwTestsDir/bootstrap.maintenance.php";
+}
+----
+
+When in doubt, prefer pointing `--bootstrap` at MW core's plain `tests/phpunit/bootstrap.php`
+directly (skipping the extension's custom file) unless that file provides something the
+extension's tests actually rely on — the fewer bootstrap layers involved, the fewer of
+these interactions to reason about.
+
+=== Coverage on public repositories only
+
+If a repository is private, do not wire up a `coverage: true` matrix row that uploads
+to a third-party service such as Codecov — private source should not leave the
+organization's own infrastructure. Restrict the `coverage: true` row and the
+`codecov-action` upload step to public repositories; for private repositories, either
+omit the coverage row entirely or keep `make ci-coverage` for the local coverage report
+without the upload step.
+
 == Updating the DCI submodule in CI
 
 When your `ci.yml` runs on a fresh checkout, the `build/` submodule is pinned to the
