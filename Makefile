@@ -165,7 +165,7 @@ endif
 composer-test-coverage: .init
 ifdef COMPOSER_EXT
 	$(show-current-target)
-	$(compose-exec-wiki-ci) bash -c "cd $(EXTENSION_FOLDER) && composer test-coverage $(COMPOSER_PARAMS) && composer post-test-coverage > /dev/null 2>&1 || true"
+	$(compose-exec-wiki-ci) bash -c "cd $(EXTENSION_FOLDER) && composer test-coverage $(COMPOSER_PARAMS) && { composer post-test-coverage > /dev/null 2>&1 || true; }"
 endif
 
 .PHONY: composer-fix
