@@ -5,6 +5,11 @@
 GH_USER := $(shell git config user.name)
 GH_TOKEN_VAR := GH_TOKEN_$(shell echo $(GH_USER) | tr '[:lower:]-' '[:upper:]_')
 GH_TOKEN := $(or $($(GH_TOKEN_VAR)),$(GH_API_TOKEN))
+# docker compose reads it from the environment as build secret GH_API_TOKEN (see docker-compose.yml);
+# exported, not part of "environment" below, so that it does not show up in the printed commands
+ifneq ($(GH_TOKEN),)
+export GH_API_TOKEN := $(GH_TOKEN)
+endif
 # ======== Naming ========
 EXTENSION_FOLDER := /var/www/html/extensions/$(EXTENSION)
 extension := $(shell echo $(EXTENSION) | tr A-Z a-z})
