@@ -155,6 +155,12 @@ added (the `1.39-php8.1` image of January 2026 is one) do not contain it, and th
 `extensions.local.json` without an error. Check with
 `docker run --rm --entrypoint bash gesinn/mediawiki-ci:<tag> -c 'command -v install-extensions.sh'`.
 
+NOTE: The Dockerfile removes every `extensions/*/extensions.local.json` from the image after reading the file,
+including the copy of your project and the ones some extensions ship (PageForms does). The PHPUnit bootstrap of
+MediaWiki 1.39 loads every `extensions/*/extension*.json` and fails with "attempted to load ... twice" otherwise.
+With a volume mount of the project (see step 3) the file is visible in the container again; this is harmless as long
+as it is the only one.
+
 TIP: Add `extensions.local.json` to your `.gitignore` when it is only needed locally.
 Commit it when the extension is a required dependency for CI.
 

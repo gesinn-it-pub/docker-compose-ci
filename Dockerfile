@@ -196,4 +196,9 @@ RUN --mount=type=secret,id=GH_API_TOKEN \
         fi; \
         install-extensions.sh /tmp/extensions.local.json; \
     fi
+# An extensions.local.json below extensions/ is not an extension registration, but the PHPUnit bootstrap of
+# MediaWiki 1.39 loads every extensions/*/extension*.json and stops with "attempted to load twice" when there
+# are two. One is the copy of the project root made above, another one comes with extensions that ship their own
+# (PageForms does). The file was consumed above, so none of them is needed in the image.
+RUN rm -f ${MW_INSTALL_PATH}/extensions/*/extensions.local.json
 ### custom extensions
