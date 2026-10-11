@@ -136,7 +136,7 @@ Each entry supports the following fields:
 
 | `private`
 | no
-| Set to `true` to use `get-private-github-extension.sh` (requires `GH_API_TOKEN` secret).
+| Set to `true` to use `get-private-github-extension.sh`. The token is taken from `GH_TOKEN_<GIT_USER_NAME>` or `GH_API_TOKEN` in the environment of `make` and handed to the build as a secret, not stored in the image.
 
 | `composer`
 | no
@@ -149,6 +149,11 @@ Each entry supports the following fields:
 
 Because the file is processed at image build time, any change requires a full
 `make install`.
+
+NOTE: `install-extensions.sh` is part of the `mediawiki-ci` base image. Base images built before it was
+added (the `1.39-php8.1` image of January 2026 is one) do not contain it, and the Dockerfile then skips
+`extensions.local.json` without an error. Check with
+`docker run --rm --entrypoint bash gesinn/mediawiki-ci:<tag> -c 'command -v install-extensions.sh'`.
 
 TIP: Add `extensions.local.json` to your `.gitignore` when it is only needed locally.
 Commit it when the extension is a required dependency for CI.

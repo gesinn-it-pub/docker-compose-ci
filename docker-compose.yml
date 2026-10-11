@@ -27,6 +27,8 @@ services:
         PS_VERSION: ${PS_VERSION}
         SMW_VERSION: ${SMW_VERSION}
         SRF_VERSION: ${SRF_VERSION}
+      secrets:
+        - GH_API_TOKEN
     image: ${IMAGE_NAME}
     
   mysql:
@@ -48,3 +50,9 @@ services:
     image: mintel/docker-wait-for-it
     profiles:
       - no-up
+
+secrets:
+  # GitHub token for extensions with "private": true in extensions.local.json. Taken from the environment
+  # of the build (the Makefile exports it); an unset variable gives an empty secret.
+  GH_API_TOKEN:
+    environment: GH_API_TOKEN

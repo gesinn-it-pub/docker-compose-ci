@@ -183,5 +183,17 @@ RUN if [ -f setup_extension ]; then \
 
 ### custom extensions (extensions.local.json in the project root, optional)
 COPY extensions.local.json* /tmp/
-RUN if command -v install-extensions.sh > /dev/null 2>&1; then install-extensions.sh /tmp/extensions.local.json; fi
+# the token for extensions with "private": true is read from /run/secrets/GH_API_TOKEN; it is only mounted
+# for this step and not part of the image. Without a token the secret is empty; the build then stops
+# with a clear message instead of failing in the download of the private extension.
+RUN --mount=type=secret,id=GH_API_TOKEN \
+    if command -v install-extensions.sh > /dev/null 2>&1; then \
+        if grep -Eq '"private"[[:space:]]*:[[:space:]]*true' /tmp/extensions.local.json 2>/dev/null \
+                && [ ! -s /run/secrets/GH_API_TOKEN ]; then \
+            echo "extensions.local.json contains an extension with \"private\": true, but GH_API_TOKEN is not set." >&2; \
+            echo "Set GH_TOKEN_<GIT_USER_NAME> or GH_API_TOKEN in the environment of make." >&2; \
+            exit 1; \
+        fi; \
+        install-extensions.sh /tmp/extensions.local.json; \
+    fi
 ### custom extensions

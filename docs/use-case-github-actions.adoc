@@ -225,7 +225,8 @@ the file once the dependency becomes required for CI too.
 
 If an entry sets `"private": true`, `install-extensions.sh` fetches it via
 `get-private-github-extension.sh`, which requires a `GH_API_TOKEN`. Store the
-token as a repository secret and pass it through in the CI step:
+token as a repository secret and pass it through in the CI step. The Makefile hands it to the image
+build as a build secret that exists for the installation step only; it is not part of the image.
 
 [source,yaml]
 ----
