@@ -124,6 +124,9 @@ git submodule update --init --remote
 | SemanticResultFormats | `SRF_VERSION`
 |===
 
+Every `*_VERSION` value is a tag or branch of the extension's wikimedia repository. To install from another GitHub
+repository, prefix it as `org/repo@version`, e.g. `DT_VERSION=gesinn-it-pub/mediawiki-extensions-DisplayTitle@5.0.1`.
+
 === Custom extensions
 
 Extensions not listed above can be installed by placing an `extensions.local.json` file in the root of your repository. See the link:docs/use-case-local-development.adoc#_installing_non_bundled_extensions_with_extensions_local_json[Local Development guide] for the full format and examples.

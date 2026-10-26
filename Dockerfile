@@ -16,6 +16,18 @@ ENV OS_PACKAGES=${OS_PACKAGES}
 # get needed dependencies for this extension
 RUN sed -i s/80/8080/g /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf
 
+# get-ext.sh <Name> <version> [org/repo]: like get-github-extension.sh, but <version> may carry its own
+# source repository as "org/repo@version"; an explicit third argument takes precedence
+RUN printf '%s\n' \
+    '#!/bin/bash' \
+    'NAME=$1; VERSION=$2; REPO=$3' \
+    'case "$VERSION" in' \
+    '    *@*) REPO=${REPO:-${VERSION%%@*}}; VERSION=${VERSION#*@} ;;' \
+    'esac' \
+    'exec get-github-extension.sh "$NAME" "$VERSION" $REPO' \
+    > /usr/local/bin/get-ext.sh && \
+    chmod +x /usr/local/bin/get-ext.sh
+
 ### SemanticMediaWiki
 ARG SMW_VERSION
 RUN if [ -n "${SMW_VERSION}" ]; then \
@@ -40,7 +52,7 @@ fi
 ARG PF_VERSION
 ARG PF_REPO
 RUN if [ ! -z "${PF_VERSION}" ]; then \
-        get-github-extension.sh PageForms ${PF_VERSION} ${PF_REPO} && \
+        get-ext.sh PageForms ${PF_VERSION} ${PF_REPO} && \
         echo 'wfLoadExtension( "PageForms" );\n' >> __setup_extension__; \
     fi
 ### PageForms
@@ -48,7 +60,7 @@ RUN if [ ! -z "${PF_VERSION}" ]; then \
 ### PageSchemas
 ARG PS_VERSION
 RUN if [ ! -z "${PS_VERSION}" ]; then \
-        get-github-extension.sh PageSchemas ${PS_VERSION} && \
+        get-ext.sh PageSchemas ${PS_VERSION} && \
         echo 'wfLoadExtension( "PageSchemas" );\n' >> __setup_extension__; \
     fi
 ### PageSchemas
@@ -56,7 +68,7 @@ RUN if [ ! -z "${PS_VERSION}" ]; then \
 ### DisplayTitle
 ARG DT_VERSION
 RUN if [ ! -z "${DT_VERSION}" ]; then \
-        get-github-extension.sh DisplayTitle ${DT_VERSION} && \
+        get-ext.sh DisplayTitle ${DT_VERSION} && \
         echo 'wfLoadExtension( "DisplayTitle" );\n' >> __setup_extension__; \
     fi
 ### DisplayTitle
@@ -64,7 +76,7 @@ RUN if [ ! -z "${DT_VERSION}" ]; then \
 ### AdminLinks
 ARG AL_VERSION
 RUN if [ ! -z "${AL_VERSION}" ]; then \
-        get-github-extension.sh AdminLinks ${AL_VERSION} && \
+        get-ext.sh AdminLinks ${AL_VERSION} && \
         echo 'wfLoadExtension( "AdminLinks" );\n' >> __setup_extension__; \
     fi
 ### AdminLinks
@@ -72,7 +84,7 @@ RUN if [ ! -z "${AL_VERSION}" ]; then \
 ### ApprovedRevs
 ARG AR_VERSION
 RUN if [ ! -z "${AR_VERSION}" ]; then \
-        get-github-extension.sh ApprovedRevs ${AR_VERSION} && \
+        get-ext.sh ApprovedRevs ${AR_VERSION} && \
         echo 'wfLoadExtension( "ApprovedRevs" );\n' >> __setup_extension__; \
     fi
 ### ApprovedRevs
@@ -112,7 +124,7 @@ RUN if [ ! -z "${LINGO_VERSION}" ]; then \
 ### Scribunto
 ARG SCRIBUNTO_VERSION
 RUN if [ ! -z "${SCRIBUNTO_VERSION}" ]; then \
-        get-github-extension.sh Scribunto ${SCRIBUNTO_VERSION} && \
+        get-ext.sh Scribunto ${SCRIBUNTO_VERSION} && \
         echo 'wfLoadExtension( "Scribunto" );\n' >> __setup_extension__; \
     fi
 ### Scribunto
@@ -120,7 +132,7 @@ RUN if [ ! -z "${SCRIBUNTO_VERSION}" ]; then \
 ### Echo
 ARG ECHO_VERSION
 RUN if [ ! -z "${ECHO_VERSION}" ]; then \
-        get-github-extension.sh Echo ${ECHO_VERSION} && \
+        get-ext.sh Echo ${ECHO_VERSION} && \
         echo 'wfLoadExtension( "Echo" );\n' >> __setup_extension__; \
     fi
 ### Echo
