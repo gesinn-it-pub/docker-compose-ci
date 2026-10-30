@@ -74,6 +74,9 @@ compose-dev = $(environment) docker compose -f build/docker-compose.yml -f build
 compose-run = $(compose) run -T --rm
 compose-exec-wiki = $(compose) exec -T wiki
 compose-exec-wiki-ci = $(compose-ci) exec -T wiki
+# For targets that collect coverage (also in the Makefile of an extension): list .coverage-driver as a
+# prerequisite and run the command with compose-exec-wiki-coverage. The driver is set by COVERAGE_DRIVER.
+compose-exec-wiki-coverage = $(compose-ci) exec -T -e XDEBUG_MODE=$(coverage-xdebug-mode) wiki
 
 show-current-target = @echo; echo "======= $@ ========"
 
@@ -178,13 +181,17 @@ ifdef COMPOSER_EXT
 endif
 
 .PHONY: composer-test-coverage
-composer-test-coverage: .init
+composer-test-coverage: .init .coverage-driver
 ifdef COMPOSER_EXT
 	$(show-current-target)
+	$(compose-exec-wiki-coverage) bash -c "cd $(EXTENSION_FOLDER) && composer test-coverage $(COMPOSER_PARAMS) && { composer post-test-coverage > /dev/null 2>&1 || true; }"
+endif
+
+# enables PCOV for COVERAGE_DRIVER=pcov, nothing to do for xdebug
+.PHONY: .coverage-driver
+.coverage-driver:
 ifeq ($(COVERAGE_DRIVER),pcov)
 	$(compose-ci) exec -T -u root wiki bash -c "docker-php-ext-enable pcov && echo 'pcov.directory=$(EXTENSION_FOLDER)' > /usr/local/etc/php/conf.d/zz-pcov-directory.ini"
-endif
-	$(compose-ci) exec -T -e XDEBUG_MODE=$(coverage-xdebug-mode) wiki bash -c "cd $(EXTENSION_FOLDER) && composer test-coverage $(COMPOSER_PARAMS) && { composer post-test-coverage > /dev/null 2>&1 || true; }"
 endif
 
 .PHONY: composer-fix
