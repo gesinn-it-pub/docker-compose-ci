@@ -91,6 +91,13 @@ git submodule update --init --remote
 | `NODE_JS`
 | Set to `true` to run `npm install` and enable JS test targets.
 
+| `COVERAGE_DRIVER`
+| `xdebug` (default) or `pcov`. With `pcov`, `make composer-test-coverage` enables PCOV in the wiki
+  container (with `pcov.directory` set to the extension folder) and switches Xdebug off, which is
+  several times faster. PCOV collects line coverage only (no branch or path coverage) and counts
+  slightly different executable lines, so compare the coverage numbers before switching.
+  Requires a `gesinn/mediawiki-ci` image that ships PCOV.
+
 | `BROWSER_TESTS`
 | Set to `true` to install Playwright and Chromium for browser smoke tests. See the
   link:docs/use-case-local-development.adoc#_browser_smoke_tests_with_playwright[Local

@@ -16,6 +16,17 @@ extension := $(shell echo $(EXTENSION) | tr A-Z a-z})
 IMAGE_NAME := $(extension):test-$(MW_VERSION)-$(SMW_VERSION) # ggf hier Timestamp 
 
 
+# ======== Coverage driver ========
+# xdebug (default) or pcov (several times faster; line coverage only, no branch/path coverage)
+COVERAGE_DRIVER ?= xdebug
+ifeq ($(COVERAGE_DRIVER),xdebug)
+coverage-xdebug-mode = coverage
+else ifeq ($(COVERAGE_DRIVER),pcov)
+coverage-xdebug-mode = off
+else
+$(error COVERAGE_DRIVER must be xdebug or pcov, got "$(COVERAGE_DRIVER)")
+endif
+
 # ======== CI ENV Variables ========
 DB_TYPE ?= sqlite
 DB_IMAGE ?= ""
@@ -170,7 +181,10 @@ endif
 composer-test-coverage: .init
 ifdef COMPOSER_EXT
 	$(show-current-target)
-	$(compose-ci) exec -T -e XDEBUG_MODE=coverage wiki bash -c "cd $(EXTENSION_FOLDER) && composer test-coverage $(COMPOSER_PARAMS) && { composer post-test-coverage > /dev/null 2>&1 || true; }"
+ifeq ($(COVERAGE_DRIVER),pcov)
+	$(compose-ci) exec -T -u root wiki bash -c "docker-php-ext-enable pcov && echo 'pcov.directory=$(EXTENSION_FOLDER)' > /usr/local/etc/php/conf.d/zz-pcov-directory.ini"
+endif
+	$(compose-ci) exec -T -e XDEBUG_MODE=$(coverage-xdebug-mode) wiki bash -c "cd $(EXTENSION_FOLDER) && composer test-coverage $(COMPOSER_PARAMS) && { composer post-test-coverage > /dev/null 2>&1 || true; }"
 endif
 
 .PHONY: composer-fix

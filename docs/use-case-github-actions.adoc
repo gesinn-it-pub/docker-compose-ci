@@ -31,8 +31,8 @@ which adds a `./coverage` bind mount so that coverage output is written to
 `build/coverage/` on the host. The coverage run uses `composer test-coverage` which
 runs with `XDEBUG_MODE=coverage` (Xdebug; with the current `gesinn/mediawiki-ci` images Xdebug is otherwise switched off); the plain `make ci` run does not.
 
-PCOV is a faster alternative to Xdebug for line coverage. The `gesinn/mediawiki-ci` image ships it
-without enabling it; see the image README for how to enable it and set `pcov.directory`.
+PCOV is a faster alternative to Xdebug for line coverage. Set `COVERAGE_DRIVER=pcov` (Makefile or
+command line) to use it in `make ci-coverage`; see the variable table in the README for the trade-offs.
 
 == GitHub Actions workflow
 
