@@ -29,7 +29,10 @@ Every run is fully isolated. No state is shared between runs.
 `make ci-coverage` works identically but uses the `docker-compose-ci.yml` overlay,
 which adds a `./coverage` bind mount so that coverage output is written to
 `build/coverage/` on the host. The coverage run uses `composer test-coverage` which
-invokes Xdebug; the plain `make ci` run does not.
+runs with `XDEBUG_MODE=coverage` (Xdebug; with the current `gesinn/mediawiki-ci` images Xdebug is otherwise switched off); the plain `make ci` run does not.
+
+PCOV is a faster alternative to Xdebug for line coverage. The `gesinn/mediawiki-ci` image ships it
+without enabling it; see the image README for how to enable it and set `pcov.directory`.
 
 == GitHub Actions workflow
 
